@@ -1,0 +1,8 @@
+/* Стили для Navbar */
+.custom-navbar {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .nav-icon {
+    margin-right: 5px;
+  }

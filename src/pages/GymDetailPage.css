@@ -1,0 +1,14 @@
+/* Стили для GymDetailPage */
+.main-image-card {
+    overflow: hidden;
+    border-radius: 10px;
+  }
+  
+  .gym-main-image {
+    max-height: 400px;
+    object-fit: cover;
+  }
+  
+  .side-card {
+    margin-bottom: 20px;
+  }

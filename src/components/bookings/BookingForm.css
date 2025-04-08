@@ -1,0 +1,17 @@
+.booking-form {
+    background-color: #f8fafc;
+    border-radius: 8px;
+    padding: 1rem;
+  }
+  
+  .booking-input {
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    padding: 0.5rem 0.75rem;
+    transition: all 0.3s ease;
+  }
+  
+  .booking-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+  }

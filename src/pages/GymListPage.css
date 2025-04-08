@@ -1,0 +1,14 @@
+/* Стили для GymListPage */
+.gym-card {
+    transition: transform 0.3s;
+    cursor: pointer;
+  }
+  
+  .gym-card:hover {
+    transform: translateY(-5px);
+  }
+  
+  .default-image {
+    height: 180px;
+    background-color: #f8f9fa;
+  }
