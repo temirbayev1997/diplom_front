@@ -1,14 +1,51 @@
 /* Стили для GymListPage */
 .gym-card {
-    transition: transform 0.3s;
-    cursor: pointer;
-  }
-  
-  .gym-card:hover {
-    transform: translateY(-5px);
-  }
-  
-  .default-image {
-    height: 180px;
-    background-color: #f8f9fa;
-  }
+  transition: transform 0.3s;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.gym-card:hover {
+  transform: translateY(-5px);
+}
+
+.default-image {
+  height: 180px;
+  background-color: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.search-bar {
+  border-radius: 30px;
+  overflow: hidden;
+}
+
+.search-bar .form-control:focus {
+  box-shadow: none;
+  border-color: #ced4da;
+}
+
+.search-bar .input-group-text,
+.search-bar .form-control {
+  background-color: #fff;
+  border-color: #ced4da;
+}
+
+.search-bar .btn-outline-secondary {
+  border-color: #ced4da;
+  color: #6c757d;
+}
+
+.search-bar .btn-outline-secondary:hover {
+  background-color: #f8f9fa;
+}
+
+.search-bar .btn-primary {
+  border-radius: 0 30px 30px 0;
+}

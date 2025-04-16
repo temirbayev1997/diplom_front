@@ -1,17 +1,32 @@
-import React, { useState } from 'react';
-import { Navbar, Nav, Container, Button, Badge, Dropdown } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Navbar, Nav, Container, Dropdown } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { BiBell, BiUser, BiDumbbell, BiCalendar, BiHomeAlt } from 'react-icons/bi';
-import './Navbar.css'; // Создайте этот файл для кастомных стилей
+import './Navbar.css';
 
 const AppNavbar = () => {
   const navigate = useNavigate();
-  const isAuthenticated = localStorage.getItem('token');
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
   const [notificationsCount, setNotificationsCount] = useState(3); // Для примера
+
+  useEffect(() => {
+    // Обновляем состояние при монтировании и при изменении localStorage
+    const checkAuth = () => {
+      setIsAuthenticated(!!localStorage.getItem('token'));
+    };
+
+    window.addEventListener('storage', checkAuth);
+    checkAuth();
+
+    return () => {
+      window.removeEventListener('storage', checkAuth);
+    };
+  }, []);
   
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('refresh');
+    setIsAuthenticated(false);
     navigate('/login');
   };
 
@@ -41,21 +56,17 @@ const AppNavbar = () => {
           {isAuthenticated ? (
             <div className="d-flex align-items-center">
               <div className="position-relative me-3">
-                <Button 
-                  variant="light" 
-                  className="notification-button rounded-circle"
+                <button 
+                  className="btn btn-light notification-button rounded-circle"
                   onClick={() => navigate('/notifications')}
                 >
                   <BiBell size={20} />
                   {notificationsCount > 0 && (
-                    <Badge 
-                      bg="danger" 
-                      className="position-absolute top-0 start-100 translate-middle badge rounded-pill"
-                    >
+                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                       {notificationsCount}
-                    </Badge>
+                    </span>
                   )}
-                </Button>
+                </button>
               </div>
               
               <Dropdown align="end">
@@ -70,25 +81,7 @@ const AppNavbar = () => {
                 </Dropdown.Menu>
               </Dropdown>
             </div>
-          ) : (
-            <div>
-              <Button 
-                variant="outline-primary" 
-                className="me-2"
-                as={Link} 
-                to="/login"
-              >
-                Войти
-              </Button>
-              <Button 
-                variant="primary"
-                as={Link} 
-                to="/register"
-              >
-                Регистрация
-              </Button>
-            </div>
-          )}
+          ) : null}
         </Navbar.Collapse>
       </Container>
     </Navbar>

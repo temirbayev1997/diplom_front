@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -26,15 +26,61 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+// Гостевой маршрут - для неавторизованных пользователей
+const GuestRoute = ({ children }) => {
+  const isAuthenticated = localStorage.getItem('token');
+  
+  if (isAuthenticated) {
+    return <Navigate to="/" />;
+  }
+  
+  return children;
+};
+
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
+
+  useEffect(() => {
+    // Добавляем обработчик события для отслеживания изменений в localStorage
+    const handleStorageChange = () => {
+      setIsAuthenticated(!!localStorage.getItem('token'));
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Проверяем статус аутентификации при монтировании
+    setIsAuthenticated(!!localStorage.getItem('token'));
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
   return (
     <Router>
       <div className="App">
-        <AppNavbar />
+        <AppNavbar isAuthenticated={isAuthenticated} />
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+          
+          <Route 
+            path="/login" 
+            element={
+              <GuestRoute>
+                <LoginPage />
+              </GuestRoute>
+            } 
+          />
+          
+          <Route 
+            path="/register" 
+            element={
+              <GuestRoute>
+                <RegisterPage />
+              </GuestRoute>
+            } 
+          />
+          
           <Route path="/gyms" element={<GymListPage />} />
           <Route path="/gyms/:id" element={<GymDetailPage />} />
           
@@ -46,6 +92,7 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          
           <Route 
             path="/profile" 
             element={
@@ -54,6 +101,7 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          
           <Route 
             path="/subscriptions" 
             element={

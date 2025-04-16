@@ -11,7 +11,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import api from '../../services/api';
+import analyticsService from '../../services/analyticsService';
 
 // Регистрируем компоненты Chart.js
 ChartJS.register(
@@ -33,7 +33,7 @@ const LoadPredictionChart = ({ gymId, date }) => {
     const fetchPredictions = async () => {
       try {
         setLoading(true);
-        const response = await api.get(`/predictions/?gym=${gymId}&date=${date}`);
+        const response = await analyticsService.getPredictions(gymId, date);
         setPredictionData(response.data);
       } catch (err) {
         console.error('Error fetching predictions:', err);

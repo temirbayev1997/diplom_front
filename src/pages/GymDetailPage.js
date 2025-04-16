@@ -3,6 +3,7 @@ import { Container, Row, Col, Card, Button, Badge, Tab, Tabs, Alert, Spinner, Fo
 import { useParams, useNavigate } from 'react-router-dom';
 import { BiTimeFive, BiUser, BiDumbbell, BiCalendarCheck } from 'react-icons/bi';
 import api from '../services/api';
+import gymService from '../services/gymService';
 import LoadPredictionChart from '../components/analytics/LoadPredictionChart';
 import BookingForm from '../components/bookings/BookingForm';
 import './GymDetailPage.css';
@@ -21,10 +22,10 @@ const GymDetailPage = () => {
     const fetchGymDetails = async () => {
       try {
         setLoading(true);
-        const gymResponse = await api.get(`/gyms/${id}/`);
+        const gymResponse = await gymService.getById(id);
         setGym(gymResponse.data);
         
-        const equipmentResponse = await api.get(`/equipment/?gym=${id}`);
+        const equipmentResponse = await gymService.getEquipment(id);
         setEquipment(equipmentResponse.data);
       } catch (err) {
         console.error('Ошибка при загрузке информации о зале:', err);
