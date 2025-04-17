@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { BiSearch, BiDumbbell, BiCalendar, BiCreditCard } from 'react-icons/bi';
 import './HomePage.css';
 
+
 const HomePage = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -11,13 +12,13 @@ const HomePage = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      // Перенаправляем на страницу залов с параметром name
-      // Это вызовет новый GET-запрос на сервере через API
-      navigate(`/gyms?name=${encodeURIComponent(searchQuery)}`);
+    const query = searchQuery.trim();
+    if (query) {
+      console.log('Search initiated on HomePage:', query);
+      fetchGymsBySearch(query); 
     }
   };
-
+  
   return (
     <Container className="mt-5">
       {!isAuthenticated && (

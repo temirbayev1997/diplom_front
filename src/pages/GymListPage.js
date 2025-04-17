@@ -101,16 +101,16 @@ const GymListPage = () => {
 
   // Обработка отправки формы поиска
   const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    
-    if (searchTerm.trim()) {
-      // Выполняем поиск по названию и адресу
-      navigate(`/gyms?search=${encodeURIComponent(searchTerm)}`);
-    } else {
-      // Если поле поиска пустое, возвращаемся к списку всех залов
-      navigate('/gyms');
-    }
+  e.preventDefault();
+  const query = searchTerm.trim();
+  if (query) {
+      // Выполняем поиск по названию и адресу без навигации
+       fetchGymsBySearch(query);
+  } else {
+        // Если поле поиска пустое, загружаем все залы
+      fetchAllGyms();
   };
+}
 
   // Очистка поиска
   const handleClearSearch = () => {
