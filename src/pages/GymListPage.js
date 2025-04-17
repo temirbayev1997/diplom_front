@@ -1,114 +1,133 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Spinner, Form, InputGroup } from 'react-bootstrap';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { BiSearch, BiX } from 'react-icons/bi';
-import gymService from '../services/gymService';
+import { BiSearch, BiX, BiDumbbell } from 'react-icons/bi';
+import axios from 'axios';
 import './GymListPage.css';
 
 const GymListPage = () => {
   const [gyms, setGyms] = useState([]);
-  const [filteredGyms, setFilteredGyms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Загрузка всех залов при монтировании компонента
+  // Эффект для обработки URL при первой загрузке и при изменении
   useEffect(() => {
-    fetchGyms();
-  }, []);
-
-  // Обработка параметров URL при их изменении
-  useEffect(() => {
+    // Получаем параметры из URL
     const queryParams = new URLSearchParams(location.search);
     const nameParam = queryParams.get('name');
     const searchParam = queryParams.get('search');
     
-    // Устанавливаем значение поиска из URL-параметров
+    // Если есть параметры поиска в URL, используем их
     if (nameParam) {
       setSearchTerm(nameParam);
+      fetchGymsByName(nameParam);
     } else if (searchParam) {
       setSearchTerm(searchParam);
+      fetchGymsBySearch(searchParam);
+    } else {
+      // Иначе загружаем все залы
+      fetchAllGyms();
     }
   }, [location.search]);
 
-  // Обновляем отфильтрованные залы при изменении поискового запроса или данных
-  useEffect(() => {
-    if (!gyms || !gyms.length) return;
-
-    const queryParams = new URLSearchParams(location.search);
-    const nameParam = queryParams.get('name');
-    
-    let filtered = [...gyms];
-    
-    if (searchTerm) {
-      if (nameParam) {
-        // Поиск только по названию, если пришли с главной страницы
-        filtered = gyms.filter(gym => 
-          gym.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      } else {
-        // Полный поиск по названию и адресу
-        filtered = gyms.filter(gym => 
-          gym.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          gym.address.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      }
-    }
-    
-    setFilteredGyms(filtered);
-  }, [searchTerm, gyms, location.search]);
-
-  const fetchGyms = async () => {
+  // Получение всех залов
+  const fetchAllGyms = async () => {
     try {
       setLoading(true);
-      const response = await gymService.getAll();
+      const response = await axios.get('http://localhost:8000/api/v1/gyms/');
+      console.log('Fetch all gyms response:', response.data);
       
-      // Обработка разных форматов ответа
-      const gymsData = Array.isArray(response.data) ? response.data : 
-                       (response.data.results ? response.data.results : []);
-      
-      setGyms(gymsData);
-      setFilteredGyms(gymsData);
+      processApiResponse(response);
     } catch (err) {
-      console.error('Error fetching gyms:', err);
-      setError('Не удалось загрузить список залов');
-    } finally {
-      setLoading(false);
+      handleApiError(err);
     }
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    navigate(`/gyms?search=${searchTerm}`);
+  // Поиск залов по названию (с главной страницы)
+  const fetchGymsByName = async (name) => {
+    try {
+      setLoading(true);
+      // Выполняем GET запрос с параметром name
+      const response = await axios.get(`http://localhost:8000/api/v1/gyms/?name=${encodeURIComponent(name)}`);
+      console.log('Fetch gyms by name response:', response.data);
+      
+      processApiResponse(response);
+    } catch (err) {
+      handleApiError(err);
+    }
   };
 
-  const handleInputChange = (e) => {
-    const value = e.target.value;
-    setSearchTerm(value);
+  // Поиск залов по названию и адресу
+  const fetchGymsBySearch = async (query) => {
+    try {
+      setLoading(true);
+      // Выполняем GET запрос с параметром search
+      const response = await axios.get(`http://localhost:8000/api/v1/gyms/?search=${encodeURIComponent(query)}`);
+      console.log('Fetch gyms by search response:', response.data);
+      
+      processApiResponse(response);
+    } catch (err) {
+      handleApiError(err);
+    }
+  };
+
+  // Обработка ответа API
+  const processApiResponse = (response) => {
+    let gymsData = [];
+    if (Array.isArray(response.data)) {
+      gymsData = response.data;
+    } else if (response.data && Array.isArray(response.data.results)) {
+      gymsData = response.data.results;
+    }
     
-    // Если строка поиска пуста и мы не на начальном URL, возвращаемся
-    if (!value && location.search) {
+    setGyms(gymsData);
+    setLoading(false);
+  };
+
+  // Обработка ошибок API
+  const handleApiError = (err) => {
+    console.error('API Error:', err);
+    setError('Не удалось загрузить список залов. Попробуйте позже.');
+    setLoading(false);
+  };
+
+  // Обработка изменения поля поиска
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  // Обработка отправки формы поиска
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    
+    if (searchTerm.trim()) {
+      // Выполняем поиск по названию и адресу
+      navigate(`/gyms?search=${encodeURIComponent(searchTerm)}`);
+    } else {
+      // Если поле поиска пустое, возвращаемся к списку всех залов
       navigate('/gyms');
     }
   };
 
+  // Очистка поиска
   const handleClearSearch = () => {
     setSearchTerm('');
     navigate('/gyms');
   };
 
-  const handleViewGym = (gymId) => {
+  // Переход на страницу деталей зала
+  const handleGymClick = (gymId) => {
     navigate(`/gyms/${gymId}`);
   };
 
   if (loading) {
     return (
-      <Container className="text-center mt-5">
-        <Spinner animation="border" role="status">
-          <span className="visually-hidden">Загрузка...</span>
-        </Spinner>
+      <Container className="mt-5 text-center">
+        <Spinner animation="border" />
+        <p className="mt-3">Загрузка залов...</p>
       </Container>
     );
   }
@@ -116,7 +135,12 @@ const GymListPage = () => {
   if (error) {
     return (
       <Container className="mt-5">
-        <div className="alert alert-danger">{error}</div>
+        <div className="alert alert-danger">
+          {error}
+          <Button className="ms-3" variant="outline-primary" onClick={fetchAllGyms}>
+            Попробовать снова
+          </Button>
+        </div>
       </Container>
     );
   }
@@ -127,15 +151,15 @@ const GymListPage = () => {
       
       <Row className="mb-4">
         <Col md={6}>
-          <Form onSubmit={handleSearch}>
-            <InputGroup className="search-bar shadow-sm">
+          <Form onSubmit={handleSearchSubmit}>
+            <InputGroup className="gym-search-bar">
               <InputGroup.Text className="bg-white border-end-0">
                 <BiSearch size={20} />
               </InputGroup.Text>
               <Form.Control
                 placeholder="Поиск по названию или адресу"
                 value={searchTerm}
-                onChange={handleInputChange}
+                onChange={handleSearchChange}
                 className="border-start-0"
               />
               {searchTerm && (
@@ -150,27 +174,28 @@ const GymListPage = () => {
                 Найти
               </Button>
             </InputGroup>
+            <small className="text-muted d-block mt-2">
+              Для расширенного поиска используйте название и адрес
+            </small>
           </Form>
         </Col>
       </Row>
 
-      {filteredGyms.length === 0 ? (
+      {gyms.length === 0 ? (
         <div className="alert alert-info">Залы не найдены</div>
       ) : (
         <Row>
-          {filteredGyms.map(gym => (
+          {gyms.map(gym => (
             <Col key={gym.id} md={4} className="mb-4">
               <Card className="gym-card h-100">
                 {gym.image ? (
-                  <Card.Img 
-                    variant="top" 
-                    src={gym.image} 
-                    style={{ height: '200px', objectFit: 'cover' }} 
-                  />
+                  <Card.Img variant="top" src={gym.image} style={{ height: '200px', objectFit: 'cover' }} />
                 ) : (
-                  <div className="bg-light text-center py-5" style={{ height: '200px' }}>
-                    <i className="bi bi-building" style={{ fontSize: '3rem' }}></i>
-                    <p>Нет изображения</p>
+                  <div className="default-image d-flex align-items-center justify-content-center">
+                    <div className="text-center">
+                      <BiDumbbell size={50} className="mb-2" />
+                      <p>Нет изображения</p>
+                    </div>
                   </div>
                 )}
                 <Card.Body className="d-flex flex-column">
@@ -184,7 +209,7 @@ const GymListPage = () => {
                   </Card.Text>
                   <Button 
                     variant="primary" 
-                    onClick={() => handleViewGym(gym.id)}
+                    onClick={() => handleGymClick(gym.id)}
                     className="mt-auto"
                   >
                     Подробнее

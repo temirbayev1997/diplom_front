@@ -11,8 +11,13 @@ const HomePage = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    navigate(`/gyms?name=${searchQuery}`);
+    if (searchQuery.trim()) {
+      // Перенаправляем на страницу залов с параметром name
+      // Это вызовет новый GET-запрос на сервере через API
+      navigate(`/gyms?name=${encodeURIComponent(searchQuery)}`);
+    }
   };
+
   return (
     <Container className="mt-5">
       {!isAuthenticated && (
@@ -24,8 +29,8 @@ const HomePage = () => {
             </p>
           </Col>
           <Col md={4} className="d-flex align-items-center justify-content-center">
-            <div className="d-grid gap-2 w-75">
-              <Button variant="outline-primary" size="lg" as={Link} to="/login">
+            <div className="d-grid gap-2 w-100">
+              <Button variant="primary" size="lg" as={Link} to="/login">
                 Войти
               </Button>
               <Button variant="outline-primary" size="lg" as={Link} to="/register">
@@ -62,6 +67,9 @@ const HomePage = () => {
                 Найти
               </Button>
             </InputGroup>
+            <small className="text-muted d-block mt-2 text-center">
+              Введите название зала для быстрого поиска
+            </small>
           </Form>
         </Col>
       </Row>
