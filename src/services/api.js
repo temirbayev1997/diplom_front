@@ -1,8 +1,7 @@
 import axios from 'axios';
 
-// Настройка базового URL для API
 const api = axios.create({
-  baseURL: '/',  // URL будет автоматически преобразован для запросов
+  baseURL: 'http://localhost:8000', // Полный URL вместо относительного пути
   headers: {
     'Content-Type': 'application/json'
   }
