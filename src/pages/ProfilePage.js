@@ -27,7 +27,7 @@ const ProfilePage = () => {
   const fetchUserProfile = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/v1/users/me/');
+      const response = await api.get('/v1/users/me/');
       setProfile(response.data);
       
       // Заполняем форму данными профиля
@@ -64,7 +64,7 @@ const ProfilePage = () => {
       setError('');
       setSuccess('');
       
-      await api.patch('/api/v1/users/me/', formData);
+      await api.patch('/v1/users/me/', formData);
       
       // Обновляем профиль после успешного обновления
       await fetchUserProfile();
@@ -384,11 +384,11 @@ const ProfilePage = () => {
                           label="Email уведомления"
                           defaultChecked
                         />
-                        <Form.Check 
+                        {/* <Form.Check 
                           type="switch"
                           id="sms-notifications"
                           label="SMS уведомления"
-                        />
+                        /> */}
                       </div>
                     </Card.Body>
                   </Card>

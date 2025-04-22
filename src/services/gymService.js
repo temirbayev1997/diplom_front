@@ -2,32 +2,27 @@ import api from './api';
 
 // Получение всех залов
 export const getAll = () => {
-  return api.get('/api/v1/gyms/');
+  return api.get('/v1/gyms/');
 };
 
 // Поиск залов только по названию
 export const searchByName = (name) => {
-  return api.get(`/api/v1/gyms/?name=${encodeURIComponent(name)}`);
+  return api.get('/v1/gyms/', { params: { name } });
 };
 
 // Полный поиск по названию и адресу
 export const search = (query) => {
-  return api.get(`/api/v1/gyms/?search=${encodeURIComponent(query)}`);
+  return api.get('/v1/gyms/', { params: { search: query } });
 };
 
 // Получение конкретного зала по ID
 export const getById = (id) => {
-  return api.get(`/api/v1/gyms/${id}/`);
+  return api.get(`/v1/gyms/${id}/`);
 };
 
 // Получение оборудования зала
 export const getEquipment = (gymId) => {
-  return api.get(`/api/v1/equipment/?gym=${gymId}`);
-};
-
-// Получение отзывов о зале
-export const getReviews = (gymId) => {
-  return api.get(`/api/v1/gyms/${gymId}/reviews/`);
+  return api.get('/v1/equipment/', { params: { gym: gymId } });
 };
 
 // Создание объекта с функциями
@@ -36,8 +31,7 @@ const gymService = {
   searchByName,
   search,
   getById,
-  getEquipment,
-  getReviews
+  getEquipment
 };
 
 export default gymService;

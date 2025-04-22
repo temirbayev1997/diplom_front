@@ -44,7 +44,7 @@ const RegisterPage = () => {
 
     try {
       // Отправляем запрос на регистрацию
-      await api.post('/api/v1/users/register/', formData);
+      await api.post('/v1/users/register/', formData);
       
       // Показываем сообщение об успехе
       setSuccess('Регистрация прошла успешно! Сейчас вы будете перенаправлены на страницу входа.');

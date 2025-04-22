@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Spinner, Form, InputGroup } from 'react-bootstrap';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { BiSearch, BiX, BiDumbbell } from 'react-icons/bi';
-import axios from 'axios';
+import gymService from '../services/gymService';
 import './GymListPage.css';
 
 const GymListPage = () => {
@@ -20,15 +20,22 @@ const GymListPage = () => {
     const nameParam = queryParams.get('name');
     const searchParam = queryParams.get('search');
     
-    // Если есть параметры поиска в URL, используем их
+    // Отладочные логи
+    console.log('URL Parameters:', { nameParam, searchParam });
+    
+    // Устанавливаем термин поиска из URL
     if (nameParam) {
       setSearchTerm(nameParam);
-      fetchGymsByName(nameParam);
     } else if (searchParam) {
       setSearchTerm(searchParam);
+    }
+    
+    // Выполняем соответствующий запрос
+    if (nameParam) {
+      fetchGymsByName(nameParam);
+    } else if (searchParam) {
       fetchGymsBySearch(searchParam);
     } else {
-      // Иначе загружаем все залы
       fetchAllGyms();
     }
   }, [location.search]);
@@ -37,8 +44,8 @@ const GymListPage = () => {
   const fetchAllGyms = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:8000/api/v1/gyms/');
-      console.log('Fetch all gyms response:', response.data);
+      console.log('Fetching all gyms...');
+      const response = await gymService.getAll();
       
       processApiResponse(response);
     } catch (err) {
@@ -50,9 +57,8 @@ const GymListPage = () => {
   const fetchGymsByName = async (name) => {
     try {
       setLoading(true);
-      // Выполняем GET запрос с параметром name
-      const response = await axios.get(`http://localhost:8000/api/v1/gyms/?name=${encodeURIComponent(name)}`);
-      console.log('Fetch gyms by name response:', response.data);
+      console.log(`Fetching gyms by name: ${name}`);
+      const response = await gymService.searchByName(name);
       
       processApiResponse(response);
     } catch (err) {
@@ -64,9 +70,8 @@ const GymListPage = () => {
   const fetchGymsBySearch = async (query) => {
     try {
       setLoading(true);
-      // Выполняем GET запрос с параметром search
-      const response = await axios.get(`http://localhost:8000/api/v1/gyms/?search=${encodeURIComponent(query)}`);
-      console.log('Fetch gyms by search response:', response.data);
+      console.log(`Fetching gyms by search: ${query}`);
+      const response = await gymService.search(query);
       
       processApiResponse(response);
     } catch (err) {
@@ -76,13 +81,20 @@ const GymListPage = () => {
 
   // Обработка ответа API
   const processApiResponse = (response) => {
+    console.log('Processing API response:', response);
+    
     let gymsData = [];
     if (Array.isArray(response.data)) {
       gymsData = response.data;
     } else if (response.data && Array.isArray(response.data.results)) {
       gymsData = response.data.results;
+    } else if (response.data) {
+      // Возможно какой-то другой формат ответа
+      console.warn('Unexpected response format:', response.data);
+      gymsData = [];
     }
     
+    console.log('Processed gyms data:', gymsData);
     setGyms(gymsData);
     setLoading(false);
   };
@@ -101,16 +113,17 @@ const GymListPage = () => {
 
   // Обработка отправки формы поиска
   const handleSearchSubmit = (e) => {
-  e.preventDefault();
-  const query = searchTerm.trim();
-  if (query) {
-      // Выполняем поиск по названию и адресу без навигации
-       fetchGymsBySearch(query);
-  } else {
-        // Если поле поиска пустое, загружаем все залы
-      fetchAllGyms();
+    e.preventDefault();
+    
+    if (searchTerm.trim()) {
+      console.log('Submitting search:', searchTerm);
+      // Выполняем поиск по названию и адресу
+      navigate(`/gyms?search=${encodeURIComponent(searchTerm)}`);
+    } else {
+      // Если поле поиска пустое, возвращаемся к списку всех залов
+      navigate('/gyms');
+    }
   };
-}
 
   // Очистка поиска
   const handleClearSearch = () => {

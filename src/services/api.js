@@ -1,19 +1,37 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8000', // Полный URL вместо относительного пути
+  baseURL: '/api',  // Будет перенаправлено через proxy
   headers: {
-    'Content-Type': 'application/json'
-  }
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  },
+  // Добавляем для поддержки CSRF
+  withCredentials: true
 });
 
 // Перехватчик для добавления токена авторизации
 api.interceptors.request.use(
   config => {
+    // Добавляем токен авторизации, если он есть
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Получаем CSRF-токен из куки, если он существует
+    const csrfToken = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('csrftoken='))
+      ?.split('=')[1];
+    
+    if (csrfToken) {
+      config.headers['X-CSRFToken'] = csrfToken;
+    }
+    
+    console.log('Request headers:', config.headers);
+    console.log('Request URL:', config.url);
+    
     return config;
   },
   error => {
@@ -35,7 +53,7 @@ api.interceptors.response.use(
         // Пытаемся обновить токен
         const refreshToken = localStorage.getItem('refresh');
         if (refreshToken) {
-          const response = await axios.post('/api/v1/users/token/refresh/', {
+          const response = await axios.post('/v1/users/token/refresh/', {
             refresh: refreshToken
           });
           
