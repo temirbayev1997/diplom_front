@@ -1,23 +1,69 @@
 import api from './api';
 
+// Функция для авторизации пользователя
 export const login = async (username, password) => {
-  const response = await api.post('/token/', { username, password });
-  if (response.data.access) {
-    localStorage.setItem('token', response.data.access);
-    localStorage.setItem('refresh', response.data.refresh);
+  try {
+    // Отправляем запрос на авторизацию
+    const response = await api.post('/api/v1/users/token/', {
+      username,
+      password
+    });
+    
+    // Сохраняем токены в localStorage
+    if (response.data.access) {
+      localStorage.setItem('token', response.data.access);
+      
+      if (response.data.refresh) {
+        localStorage.setItem('refresh', response.data.refresh);
+      }
+      
+      return response.data;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Ошибка при авторизации:', error);
+    throw error;
   }
-  return response.data;
 };
 
+// Функция для выхода
 export const logout = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('refresh');
 };
 
-export const register = (userData) => {
-  return api.post('/users/', userData);
+// Функция для регистрации пользователя
+export const register = async (userData) => {
+  try {
+    const response = await api.post('/api/v1/users/register/', userData);
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при регистрации:', error);
+    throw error;
+  }
 };
 
-export const getCurrentUser = () => {
-  return api.get('/users/me/');
+// Функция для проверки токена
+export const checkAuth = () => {
+  return !!localStorage.getItem('token');
+};
+
+// Функция для получения данных текущего пользователя
+export const getCurrentUser = async () => {
+  try {
+    const response = await api.get('/api/v1/users/me/');
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при получении данных пользователя:', error);
+    throw error;
+  }
+};
+
+export default {
+  login,
+  logout,
+  register,
+  checkAuth,
+  getCurrentUser
 };

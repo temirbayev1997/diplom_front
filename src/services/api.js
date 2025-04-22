@@ -1,85 +1,71 @@
-import axios from 'axios';
+import axios from "axios";
 
 const api = axios.create({
-  baseURL: '/api',  // Будет перенаправлено через proxy
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-  },
-  // Добавляем для поддержки CSRF
-  withCredentials: true
+    baseURL: "http://127.0.0.1:8000",
+    headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
 });
 
-// Перехватчик для добавления токена авторизации
 api.interceptors.request.use(
-  config => {
-    // Добавляем токен авторизации, если он есть
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    (config) => {
+        const token = localStorage.getItem("token");
+        
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+            config.headers["referrerPolicy"] = "unsafe-url";
+        }
+        
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
     }
-    
-    // Получаем CSRF-токен из куки, если он существует
-    const csrfToken = document.cookie
-      .split('; ')
-      .find(row => row.startsWith('csrftoken='))
-      ?.split('=')[1];
-    
-    if (csrfToken) {
-      config.headers['X-CSRFToken'] = csrfToken;
-    }
-    
-    console.log('Request headers:', config.headers);
-    console.log('Request URL:', config.url);
-    
-    return config;
-  },
-  error => {
-    return Promise.reject(error);
-  }
 );
 
-// Перехватчик для обработки ошибок и обновления токена
+// Перехватчик для обновления токена при ошибке авторизации
 api.interceptors.response.use(
-  response => response,
-  async error => {
-    const originalRequest = error.config;
-    
-    // Если ошибка 401 (Unauthorized) и не пытались обновить токен
-    if (error.response && error.response.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      
-      try {
-        // Пытаемся обновить токен
-        const refreshToken = localStorage.getItem('refresh');
-        if (refreshToken) {
-          const response = await axios.post('/v1/users/token/refresh/', {
-            refresh: refreshToken
-          });
-          
-          // Сохраняем новый токен
-          if (response.data.access) {
-            localStorage.setItem('token', response.data.access);
+    (response) => response,
+    async (error) => {
+        // Если ошибка 401 и не пытались обновить токен
+        if (error.response && error.response.status === 401 && !error.config._retry) {
+            error.config._retry = true;
             
-            // Обновляем заголовок и повторяем запрос
-            api.defaults.headers.common['Authorization'] = `Bearer ${response.data.access}`;
-            originalRequest.headers['Authorization'] = `Bearer ${response.data.access}`;
-            return api(originalRequest);
-          }
+            try {
+                // Попытка обновить токен
+                const refreshToken = localStorage.getItem("refresh");
+                if (refreshToken) {
+                    const response = await axios.post('http://127.0.0.1:8000/api/v1/users/token/refresh/', {
+                        refresh: refreshToken
+                    });
+                    
+                    if (response.data.access) {
+                        localStorage.setItem("token", response.data.access);
+                        
+                        // Обновляем токен в заголовке и повторяем запрос
+                        api.defaults.headers.common['Authorization'] = `Bearer ${response.data.access}`;
+                        error.config.headers['Authorization'] = `Bearer ${response.data.access}`;
+                        
+                        return api(error.config);
+                    }
+                }
+            } catch (refreshError) {
+                console.error("Ошибка обновления токена:", refreshError);
+                
+                // Если не удалось обновить токен, перенаправляем на страницу входа
+                localStorage.removeItem("token");
+                localStorage.removeItem("refresh");
+                
+                // Перенаправление на страницу входа
+                window.location.href = '/login';
+                
+                return Promise.reject(refreshError);
+            }
         }
-      } catch (refreshError) {
-        // Если не удалось обновить токен, выходим из системы
-        localStorage.removeItem('token');
-        localStorage.removeItem('refresh');
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
-      }
+        
+        return Promise.reject(error);
     }
-    
-    // Логгируем ошибки
-    console.error('API Error:', error.response ? error.response.data : error.message);
-    return Promise.reject(error);
-  }
 );
 
 export default api;
