@@ -1,7 +1,7 @@
 // src/components/gyms/GymRating.jsx
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Button, Row, Col, Spinner, Alert, ListGroup } from 'react-bootstrap';
-import { BiStar, BiStarFilled, BiUser } from 'react-icons/bi';
+import { Card, Form, Button, Spinner, Alert, ListGroup } from 'react-bootstrap';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 import api from '../../services/api';
 import './GymRating.css'; 
 
@@ -25,17 +25,16 @@ const GymRating = ({ gymId }) => {
     try {
       setLoading(true);
       const response = await api.get(`/api/v1/analytics/gym-ratings/?gym=${gymId}`);
-      
+
       if (response.data) {
         setRatings(response.data);
-        
-        // Проверяем, оставлял ли текущий пользователь отзыв
+
         const isAuthenticated = !!localStorage.getItem('token');
         if (isAuthenticated) {
           try {
             const userResponse = await api.get('/api/v1/users/me/');
             const userId = userResponse.data.id;
-            
+
             const userRatingObj = response.data.find(rating => rating.user === userId);
             if (userRatingObj) {
               setUserRating(userRatingObj.rating);
@@ -65,31 +64,31 @@ const GymRating = ({ gymId }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (userRating === 0) {
       setError('Пожалуйста, выберите рейтинг от 1 до 5');
       return;
     }
-    
+
     try {
       setSubmitting(true);
       setError(null);
       setSuccess(null);
-      
+
       const ratingData = {
         gym: gymId,
         rating: userRating,
         comment
       };
-      
+
       await api.post('/api/v1/analytics/gym-ratings/', ratingData);
-      
+
       setSuccess('Спасибо за ваш отзыв!');
       await fetchRatings();
       setEditMode(true);
     } catch (err) {
       console.error('Ошибка при отправке отзыва:', err);
-      
+
       if (err.response && err.response.data && err.response.data[0] === 'Рейтинг обновлен') {
         setSuccess('Ваш отзыв успешно обновлен!');
         await fetchRatings();
@@ -103,7 +102,7 @@ const GymRating = ({ gymId }) => {
 
   const calculateAverageRating = () => {
     if (!ratings || ratings.length === 0) return 0;
-    
+
     const sum = ratings.reduce((acc, rating) => acc + rating.rating, 0);
     return (sum / ratings.length).toFixed(1);
   };
@@ -117,11 +116,7 @@ const GymRating = ({ gymId }) => {
             onClick={() => interactive && handleRatingChange(star)}
             style={{ cursor: interactive ? 'pointer' : 'default' }}
           >
-            {star <= rating ? (
-              <BiStarFilled className="text-warning" />
-            ) : (
-              <BiStar className="text-warning" />
-            )}
+            <i className={`bi ${star <= rating ? 'bi-star-fill' : 'bi-star'} text-warning`}></i>
           </span>
         ))}
       </div>
@@ -152,31 +147,30 @@ const GymRating = ({ gymId }) => {
       <Card className="mb-4">
         <Card.Body>
           <Card.Title>Отзывы и рейтинг</Card.Title>
-          
+
           <div className="average-rating d-flex align-items-center mb-3">
             <div className="rating-value fs-2 me-2">{averageRating}</div>
             {renderStars(averageRating)}
-            <span className="ms-2 text-muted">({ratings.length} {ratings.length === 1 ? 'отзыв' : 
-              ratings.length >= 2 && ratings.length <= 4 ? 'отзыва' : 'отзывов'})</span>
+            <span className="ms-2 text-muted">
+              ({ratings.length} {ratings.length === 1 ? 'отзыв' :
+                ratings.length >= 2 && ratings.length <= 4 ? 'отзыва' : 'отзывов'})
+            </span>
           </div>
-          
-          {/* Форма для отправки отзыва */}
+
           {localStorage.getItem('token') ? (
             <Card className="mb-4">
               <Card.Body>
                 <h6>{editMode ? 'Изменить ваш отзыв' : 'Оставить отзыв'}</h6>
-                
+
                 {error && <Alert variant="danger">{error}</Alert>}
                 {success && <Alert variant="success">{success}</Alert>}
-                
+
                 <Form onSubmit={handleSubmit}>
                   <Form.Group className="mb-3">
                     <Form.Label>Ваша оценка</Form.Label>
-                    <div>
-                      {renderStars(userRating, true)}
-                    </div>
+                    <div>{renderStars(userRating, true)}</div>
                   </Form.Group>
-                  
+
                   <Form.Group className="mb-3">
                     <Form.Label>Комментарий (необязательно)</Form.Label>
                     <Form.Control
@@ -188,7 +182,7 @@ const GymRating = ({ gymId }) => {
                       disabled={submitting}
                     />
                   </Form.Group>
-                  
+
                   <Button
                     type="submit"
                     variant="primary"
@@ -216,8 +210,7 @@ const GymRating = ({ gymId }) => {
               <a href="/login">Войдите</a> или <a href="/register">зарегистрируйтесь</a>, чтобы оставить отзыв
             </Alert>
           )}
-          
-          {/* Список отзывов */}
+
           <h6>Все отзывы</h6>
           {ratings.length === 0 ? (
             <p className="text-muted">Пока нет отзывов</p>
@@ -228,7 +221,7 @@ const GymRating = ({ gymId }) => {
                   <div className="d-flex justify-content-between align-items-center mb-2">
                     <div className="d-flex align-items-center">
                       <div className="user-avatar me-2">
-                        {rating.user_details?.profile_picture ? (
+                        {rating.user_details && rating.user_details.profile_picture ? (
                           <img
                             src={rating.user_details.profile_picture}
                             alt={`${rating.user_details.username}`}
@@ -238,18 +231,16 @@ const GymRating = ({ gymId }) => {
                           />
                         ) : (
                           <div className="avatar-placeholder">
-                            <BiUser />
+                            <i className="bi bi-person-circle fs-4"></i>
                           </div>
                         )}
                       </div>
                       <div>
-                        <strong>{rating.user_details?.username || 'Пользователь'}</strong>
+                        <strong>{rating.user_details ? rating.user_details.username : 'Пользователь'}</strong>
                         <div className="small text-muted">{formatDate(rating.created_at)}</div>
                       </div>
                     </div>
-                    <div>
-                      {renderStars(rating.rating)}
-                    </div>
+                    <div>{renderStars(rating.rating)}</div>
                   </div>
                   {rating.comment && <p className="mb-0">{rating.comment}</p>}
                 </ListGroup.Item>

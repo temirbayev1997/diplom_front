@@ -1,7 +1,7 @@
 // src/components/notifications/NotificationList.jsx
 import React, { useState, useEffect } from 'react';
 import { ListGroup, Badge, Spinner, Button, Alert } from 'react-bootstrap';
-import { BiCalendar, BiInfoCircle, BiCheckCircle, BiMegaphone } from 'react-icons/bi';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 import api from '../../services/api';
 import './NotificationList.css';
 
@@ -60,24 +60,34 @@ const NotificationList = () => {
   };
 
   const getNotificationIcon = (type) => {
+    let iconClass = 'bi-info-circle'; // default
+  
     switch (type) {
       case 'booking':
-        return <BiCalendar className="notification-icon booking" />;
+        iconClass = 'bi-calendar-event';
+        break;
       case 'reminder':
-        return <BiInfoCircle className="notification-icon reminder" />;
+        iconClass = 'bi-info-circle';
+        break;
       case 'crowding':
-        return <BiInfoCircle className="notification-icon crowding" />;
+        iconClass = 'bi-people-fill';
+        break;
       case 'low_load':
-        return <BiInfoCircle className="notification-icon low-load" />;
+        iconClass = 'bi-speedometer2';
+        break;
       case 'system':
-        return <BiCheckCircle className="notification-icon system" />;
+        iconClass = 'bi-check-circle';
+        break;
       case 'promo':
-        return <BiMegaphone className="notification-icon promo" />;
+        iconClass = 'bi-megaphone-fill';
+        break;
       default:
-        return <BiInfoCircle className="notification-icon" />;
+        iconClass = 'bi-info-circle';
     }
+  
+    return <i className={`bi ${iconClass} notification-icon`} />;
   };
-
+  
   const formatCreatedAt = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
