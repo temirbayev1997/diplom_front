@@ -1,3 +1,4 @@
+// src/pages/GymDetailPage.js (обновление)
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Badge, Tab, Tabs, Alert, Spinner, Form } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -5,8 +6,11 @@ import { BiTimeFive, BiUser, BiDumbbell, BiCalendarCheck } from 'react-icons/bi'
 import api from '../services/api';
 import gymService from '../services/gymService';
 import LoadPredictionChart from '../components/analytics/LoadPredictionChart';
+import LoadHeatmap from '../components/analytics/LoadHeatmap'; // Новый компонент
+import GymRating from '../components/gyms/GymRating'; // Новый компонент
 import BookingForm from '../components/bookings/BookingForm';
 import './GymDetailPage.css';
+
 
 const GymDetailPage = () => {
   const { id } = useParams();
@@ -153,6 +157,9 @@ const GymDetailPage = () => {
               </Card.Body>
             </Card>
           )}
+          
+          {/* Добавляем компонент рейтинга */}
+          <GymRating gymId={id} />
         </Col>
         
         <Col lg={4}>
@@ -176,6 +183,16 @@ const GymDetailPage = () => {
                 </Card.Body>
               </Card>
             </Tab>
+            
+            <Tab eventKey="heatmap" title="Тепловая карта">
+              <Card className="side-card">
+                <Card.Body>
+                  {/* Добавляем новый компонент тепловой карты */}
+                  <LoadHeatmap gymId={id} />
+                </Card.Body>
+              </Card>
+            </Tab>
+            
             <Tab eventKey="equipment" title="Оборудование">
               <Card className="side-card">
                 <Card.Body>

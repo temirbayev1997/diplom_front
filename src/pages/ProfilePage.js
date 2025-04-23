@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Tab, Tabs, Image } from 'react-bootstrap';
 import { BiUser, BiEnvelope, BiPhone, BiCalendar, BiHome, BiEdit } from 'react-icons/bi';
 import api from '../services/api';
 import './ProfilePage.css';
+import PersonalRecommendations from '../components/analytics/PersonalRecommedations';
 
 const ProfilePage = () => {
   const [profile, setProfile] = useState(null);
@@ -19,15 +21,22 @@ const ProfilePage = () => {
     address: '',
     bio: ''
   });
+  const [preference, setPreference] = useState({
+    preferred_gym: '',
+    preferred_day: '',
+    preferred_hour: '',
+    avoid_crowded: true
+  });
 
   useEffect(() => {
     fetchUserProfile();
+    fetchUserPreferences();
   }, []);
 
   const fetchUserProfile = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/v1/users/me/');
+      const response = await api.get('/api/v1/users/me/');
       setProfile(response.data);
       
       // Заполняем форму данными профиля
@@ -48,11 +57,31 @@ const ProfilePage = () => {
     }
   };
 
+  const fetchUserPreferences = async () => {
+    try {
+      const response = await api.get('/api/v1/analytics/user-preferences/');
+      if (response.data && response.data.length > 0) {
+        setPreference(response.data[0]);
+      }
+    } catch (err) {
+      console.error('Ошибка при загрузке предпочтений:', err);
+      // Не показываем ошибку пользователю, т.к. это некритично
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value
+    }));
+  };
+
+  const handlePreferenceChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setPreference((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
@@ -64,7 +93,7 @@ const ProfilePage = () => {
       setError('');
       setSuccess('');
       
-      await api.patch('/v1/users/me/', formData);
+      await api.patch('/api/v1/users/me/', formData);
       
       // Обновляем профиль после успешного обновления
       await fetchUserProfile();
@@ -88,6 +117,26 @@ const ProfilePage = () => {
       } else {
         setError('Не удалось подключиться к серверу');
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSavePreferences = async () => {
+    try {
+      setLoading(true);
+      if (preference.id) {
+        // Обновляем существующие предпочтения
+        await api.patch(`/api/v1/analytics/user-preferences/${preference.id}/`, preference);
+      } else {
+        // Создаем новые предпочтения
+        await api.post('/api/v1/analytics/user-preferences/', preference);
+      }
+      setSuccess('Предпочтения успешно сохранены');
+      await fetchUserPreferences();
+    } catch (err) {
+      console.error('Ошибка при сохранении предпочтений:', err);
+      setError('Не удалось сохранить предпочтения');
     } finally {
       setLoading(false);
     }
@@ -333,13 +382,102 @@ const ProfilePage = () => {
                 </Card.Body>
               </Card>
             ) : (
-              <Tabs defaultActiveKey="activity" className="mb-3">
+              <Tabs defaultActiveKey="recommendations" className="mb-3">
+                <Tab eventKey="recommendations" title="Рекомендации">
+                  <Card className="mb-4">
+                    <Card.Body>
+                      <PersonalRecommendations />
+                    </Card.Body>
+                  </Card>
+                  <Card>
+                    <Card.Body>
+                      <h5 className="mb-3">Мои предпочтения</h5>
+                      <Form>
+                        <Row>
+                          <Col md={6}>
+                            <Form.Group className="mb-3">
+                              <Form.Label>Предпочитаемый зал</Form.Label>
+                              <Form.Select
+                                name="preferred_gym"
+                                value={preference.preferred_gym || ''}
+                                onChange={handlePreferenceChange}
+                              >
+                                <option value="">Выберите зал</option>
+                                {/* Здесь будет список залов из API */}
+                              </Form.Select>
+                            </Form.Group>
+                          </Col>
+                          <Col md={6}>
+                            <Form.Group className="mb-3">
+                              <Form.Label>Предпочитаемый день недели</Form.Label>
+                              <Form.Select
+                                name="preferred_day"
+                                value={preference.preferred_day || ''}
+                                onChange={handlePreferenceChange}
+                              >
+                                <option value="">Любой день</option>
+                                <option value="0">Понедельник</option>
+                                <option value="1">Вторник</option>
+                                <option value="2">Среда</option>
+                                <option value="3">Четверг</option>
+                                <option value="4">Пятница</option>
+                                <option value="5">Суббота</option>
+                                <option value="6">Воскресенье</option>
+                              </Form.Select>
+                            </Form.Group>
+                          </Col>
+                        </Row>
+                        
+                        <Row>
+                          <Col md={6}>
+                            <Form.Group className="mb-3">
+                              <Form.Label>Предпочитаемое время</Form.Label>
+                              <Form.Select
+                                name="preferred_hour"
+                                value={preference.preferred_hour || ''}
+                                onChange={handlePreferenceChange}
+                              >
+                                <option value="">Любое время</option>
+                                {[...Array(24)].map((_, i) => (
+                                  <option key={i} value={i}>{i}:00</option>
+                                ))}
+                              </Form.Select>
+                            </Form.Group>
+                          </Col>
+                          <Col md={6}>
+                            <Form.Group className="mb-3 mt-4">
+                              <Form.Check
+                                type="checkbox"
+                                id="avoid-crowded"
+                                label="Избегать загруженных часов"
+                                name="avoid_crowded"
+                                checked={preference.avoid_crowded}
+                                onChange={handlePreferenceChange}
+                              />
+                            </Form.Group>
+                          </Col>
+                        </Row>
+                        
+                        <div className="d-flex justify-content-end">
+                          <Button 
+                            variant="primary"
+                            onClick={handleSavePreferences}
+                            disabled={loading}
+                          >
+                            Сохранить предпочтения
+                          </Button>
+                        </div>
+                      </Form>
+                    </Card.Body>
+                  </Card>
+                </Tab>
+                
                 <Tab eventKey="activity" title="Активность">
                   <Card>
                     <Card.Body>
                       <h5>Ваша активность</h5>
                       <p className="text-muted">
-                        Здесь будет отображаться история ваших тренировок и посещений.
+                        Здесь отображается история ваших тренировок и посещений.
                       </p>
                       
                       <div className="text-center my-4">
@@ -349,6 +487,7 @@ const ProfilePage = () => {
                     </Card.Body>
                   </Card>
                 </Tab>
+                
                 <Tab eventKey="bio" title="О себе">
                   <Card>
                     <Card.Body>
@@ -361,6 +500,7 @@ const ProfilePage = () => {
                     </Card.Body>
                   </Card>
                 </Tab>
+                
                 <Tab eventKey="settings" title="Настройки">
                   <Card>
                     <Card.Body>
@@ -384,11 +524,12 @@ const ProfilePage = () => {
                           label="Email уведомления"
                           defaultChecked
                         />
-                        {/* <Form.Check 
+                        <Form.Check 
                           type="switch"
-                          id="sms-notifications"
-                          label="SMS уведомления"
-                        /> */}
+                          id="push-notifications"
+                          label="Push уведомления" 
+                          defaultChecked
+                        />
                       </div>
                     </Card.Body>
                   </Card>
