@@ -64,25 +64,6 @@ const NotificationsPage = () => {
                     onChange={handleSettingChange}
                     className="mb-2"
                   />
-                  
-                  <Form.Check 
-                    type="switch"
-                    id="push-notifications"
-                    name="push_notifications"
-                    label="Push уведомления"
-                    checked={notificationSettings.push_notifications}
-                    onChange={handleSettingChange}
-                    className="mb-2"
-                  />
-                  
-                  {/* <Form.Check 
-                    type="switch"
-                    id="sms-notifications"
-                    name="sms_notifications"
-                    label="SMS уведомления"
-                    checked={notificationSettings.sms_notifications}
-                    onChange={handleSettingChange}
-                  /> */}
                 </div>
                 
                 <div>

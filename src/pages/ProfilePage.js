@@ -524,12 +524,6 @@ const ProfilePage = () => {
                           label="Email уведомления"
                           defaultChecked
                         />
-                        <Form.Check 
-                          type="switch"
-                          id="push-notifications"
-                          label="Push уведомления" 
-                          defaultChecked
-                        />
                       </div>
                     </Card.Body>
                   </Card>
