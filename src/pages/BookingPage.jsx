@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Badge, Button, Spinner, Alert, Modal } from 'react-bootstrap';
 import { BiCalendar, BiTime, BiBuilding, BiX } from 'react-icons/bi';
-import { getMyBookings, cancelBooking } from '../services/bookingService';
+import api from '../services/api';
 import './BookingPage.css';
 
 const BookingPage = () => {
@@ -15,9 +15,12 @@ const BookingPage = () => {
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      // Используем bookingService для получения данных
-      const response = await getMyBookings();
-      setBookings(response.data);
+      // Make API request
+      const response = await api.get('/v1/bookings/my-bookings/');
+      
+      // Check if response.data is an array, if not initialize as empty array
+      const bookingsData = Array.isArray(response.data) ? response.data : [];
+      setBookings(bookingsData);
     } catch (err) {
       console.error('Ошибка при загрузке бронирований:', err);
       setError('Не удалось загрузить данные о бронированиях. Пожалуйста, попробуйте позже.');
@@ -55,7 +58,7 @@ const BookingPage = () => {
     
     try {
       setCancellingBooking(true);
-      await cancelBooking(selectedBookingId);
+      await api.patch(`/v1/bookings/${selectedBookingId}/`, { status: 'cancelled' });
       
       // Обновляем список бронирований после успешной отмены
       fetchBookings();
@@ -139,7 +142,7 @@ const BookingPage = () => {
                               <BiTime className="text-primary me-2" />
                               <div>
                                 <small className="text-muted d-block">Время</small>
-                                <div>{booking.start_time.slice(0, 5)} - {booking.end_time.slice(0, 5)}</div>
+                                <div>{booking.start_time?.slice(0, 5) || '00:00'} - {booking.end_time?.slice(0, 5) || '00:00'}</div>
                               </div>
                             </div>
                           </Col>

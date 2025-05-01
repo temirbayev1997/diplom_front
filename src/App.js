@@ -16,7 +16,8 @@ import BookingPage from './pages/BookingPage';
 import ProfilePage from './pages/ProfilePage';
 import SubscriptionPage from './pages/SubscriptionPage';
 import AdminDashboard from './pages/AdminDashboard';
-import NotificationsPage from './pages/NotificationsPage'; // Новая страница уведомлений
+import NotificationsPage from './pages/NotificationsPage';
+import GymLoadStatusPage from './pages/GymLoadStatusPage'; // Импортируем новую страницу
 
 // Защищенный маршрут
 const ProtectedRoute = ({ children, adminRequired = false }) => {
@@ -98,6 +99,9 @@ function AppRoutes() {
           <Route path="/gyms" element={<GymListPage />} />
           <Route path="/gyms/:id" element={<GymDetailPage />} />
           
+          {/* Добавляем новый маршрут для страницы состояния загруженности залов */}
+          <Route path="/gym-load-status" element={<GymLoadStatusPage />} />
+          
           <Route 
             path="/bookings" 
             element={
@@ -134,7 +138,6 @@ function AppRoutes() {
             } 
           />
           
-          {/* Новый маршрут для страницы уведомлений */}
           <Route 
             path="/notifications" 
             element={

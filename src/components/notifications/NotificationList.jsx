@@ -1,7 +1,6 @@
 // src/components/notifications/NotificationList.jsx
 import React, { useState, useEffect } from 'react';
 import { ListGroup, Badge, Spinner, Button, Alert } from 'react-bootstrap';
-import 'bootstrap-icons/font/bootstrap-icons.css';
 import api from '../../services/api';
 import './NotificationList.css';
 
@@ -85,7 +84,7 @@ const NotificationList = () => {
         iconClass = 'bi-info-circle';
     }
   
-    return <i className={`bi ${iconClass} notification-icon`} />;
+    return <i className={`bi ${iconClass} notification-icon ${type}`}></i>;
   };
   
   const formatCreatedAt = (dateString) => {

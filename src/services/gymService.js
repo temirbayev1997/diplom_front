@@ -2,27 +2,28 @@ import api from './api';
 
 // Получение всех залов
 export const getAll = () => {
-  return api.get('/v1/gyms/');
+  return api.get('/api/v1/gyms/');
 };
 
-// Поиск залов только по названию
+// Поиск залов по названию или адресу
+// В данном случае мы используем параметр запроса, так как в URL нет специального маршрута для поиска
 export const searchByName = (name) => {
-  return api.get('/v1/gyms/', { params: { name } });
+  return api.get(`/api/v1/gyms/?${encodeURIComponent(name)}`);
 };
 
 // Полный поиск по названию и адресу
 export const search = (query) => {
-  return api.get('/v1/gyms/', { params: { search: query } });
+  return api.get(`/api/v1/gyms/?${encodeURIComponent(query)}`);
 };
 
 // Получение конкретного зала по ID
 export const getById = (id) => {
-  return api.get(`/v1/gyms/${id}/`);
+  return api.get(`/api/v1/gyms/${id}/`);
 };
 
 // Получение оборудования зала
 export const getEquipment = (gymId) => {
-  return api.get('/v1/equipment/', { params: { gym: gymId } });
+  return api.get(`/api/v1/gyms/equipment/?gym=${gymId}`);
 };
 
 // Создание объекта с функциями

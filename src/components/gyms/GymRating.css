@@ -1,36 +1,36 @@
 /* src/components/gyms/GymRating.css */
 .rating-stars {
-    display: inline-flex;
-    font-size: 1.25rem;
-  }
-  
-  .rating-stars span {
-    margin-right: 3px;
-  }
-  
-  .average-rating {
-    font-weight: 600;
-  }
-  
-  .rating-value {
-    font-weight: 700;
-    color: #f8c21c;
-    margin-right: 10px;
-  }
-  
-  .avatar-placeholder {
-    width: 30px;
-    height: 30px;
-    background-color: #e9ecef;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #6c757d;
-  }
-  
-  .user-avatar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+  display: inline-flex;
+  font-size: 1.25rem;
+}
+
+.rating-stars span {
+  margin-right: 3px;
+}
+
+.average-rating {
+  font-weight: 600;
+}
+
+.rating-value {
+  font-weight: 700;
+  color: #f8c21c;
+  margin-right: 10px;
+}
+
+.avatar-placeholder {
+  width: 30px;
+  height: 30px;
+  background-color: #e9ecef;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+}
+
+.user-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

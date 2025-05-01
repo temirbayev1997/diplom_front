@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Spinner, Form, InputGroup } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Spinner, Form, InputGroup, Alert } from 'react-bootstrap';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { BiSearch, BiX, BiDumbbell } from 'react-icons/bi';
-import gymService from '../services/gymService';
+import api from '../services/api';
 import './GymListPage.css';
 
 const GymListPage = () => {
@@ -45,9 +45,16 @@ const GymListPage = () => {
     try {
       setLoading(true);
       console.log('Fetching all gyms...');
-      const response = await gymService.getAll();
+      const response = await api.get('/api/v1/gyms/');
       
-      processApiResponse(response);
+      if (response.data) {
+        console.log('Gyms data received:', response.data);
+        setGyms(Array.isArray(response.data) ? response.data : []);
+      } else {
+        console.log('No data received');
+        setGyms([]);
+      }
+      setLoading(false);
     } catch (err) {
       handleApiError(err);
     }
@@ -58,9 +65,16 @@ const GymListPage = () => {
     try {
       setLoading(true);
       console.log(`Fetching gyms by name: ${name}`);
-      const response = await gymService.searchByName(name);
+      const response = await api.get(`/api/v1/gyms/?name=${encodeURIComponent(name)}`);
       
-      processApiResponse(response);
+      if (response.data) {
+        console.log('Gyms data received:', response.data);
+        setGyms(Array.isArray(response.data) ? response.data : []);
+      } else {
+        console.log('No data received');
+        setGyms([]);
+      }
+      setLoading(false);
     } catch (err) {
       handleApiError(err);
     }
@@ -71,32 +85,19 @@ const GymListPage = () => {
     try {
       setLoading(true);
       console.log(`Fetching gyms by search: ${query}`);
-      const response = await gymService.search(query);
+      const response = await api.get(`/api/v1/gyms/?search=${encodeURIComponent(query)}`);
       
-      processApiResponse(response);
+      if (response.data) {
+        console.log('Gyms data received:', response.data);
+        setGyms(Array.isArray(response.data) ? response.data : []);
+      } else {
+        console.log('No data received');
+        setGyms([]);
+      }
+      setLoading(false);
     } catch (err) {
       handleApiError(err);
     }
-  };
-
-  // Обработка ответа API
-  const processApiResponse = (response) => {
-    console.log('Processing API response:', response);
-    
-    let gymsData = [];
-    if (Array.isArray(response.data)) {
-      gymsData = response.data;
-    } else if (response.data && Array.isArray(response.data.results)) {
-      gymsData = response.data.results;
-    } else if (response.data) {
-      // Возможно какой-то другой формат ответа
-      console.warn('Unexpected response format:', response.data);
-      gymsData = [];
-    }
-    
-    console.log('Processed gyms data:', gymsData);
-    setGyms(gymsData);
-    setLoading(false);
   };
 
   // Обработка ошибок API
@@ -117,7 +118,7 @@ const GymListPage = () => {
     
     if (searchTerm.trim()) {
       console.log('Submitting search:', searchTerm);
-      // Выполняем поиск по названию и адресу
+      // Выполняем поиск по названию и адресу и направляем на URL с поисковым запросом
       navigate(`/gyms?search=${encodeURIComponent(searchTerm)}`);
     } else {
       // Если поле поиска пустое, возвращаемся к списку всех залов
@@ -195,7 +196,7 @@ const GymListPage = () => {
       </Row>
 
       {gyms.length === 0 ? (
-        <div className="alert alert-info">Залы не найдены</div>
+        <Alert variant="info">Залы не найдены</Alert>
       ) : (
         <Row>
           {gyms.map(gym => (

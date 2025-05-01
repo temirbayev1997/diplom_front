@@ -1,52 +1,52 @@
 /* src/components/notifications/NotificationList.css */
 .notification-item {
-    cursor: pointer;
-    padding: 12px 16px;
-    transition: background-color 0.2s;
-  }
-  
-  .notification-item:hover {
-    background-color: #f8f9fa;
-  }
-  
-  .notification-item.unread {
-    background-color: #f0f7ff;
-  }
-  
-  .notification-item.unread:hover {
-    background-color: #e6f0ff;
-  }
-  
-  .notification-icon {
-    font-size: 24px;
-    color: #6c757d;
-  }
-  
-  .notification-icon.booking {
-    color: #0d6efd;
-  }
-  
-  .notification-icon.reminder {
-    color: #ffc107;
-  }
-  
-  .notification-icon.system {
-    color: #198754;
-  }
-  
-  .notification-icon.promo {
-    color: #6610f2;
-  }
-  
-  .notification-icon.crowding {
-    color: #dc3545;
-  }
-  
-  .notification-icon.low-load {
-    color: #198754;
-  }
-  
-  .notification-message {
-    color: #6c757d;
-    font-size: 0.95rem;
-  }
+  cursor: pointer;
+  padding: 12px 16px;
+  transition: background-color 0.2s;
+}
+
+.notification-item:hover {
+  background-color: #f8f9fa;
+}
+
+.notification-item.unread {
+  background-color: #f0f7ff;
+}
+
+.notification-item.unread:hover {
+  background-color: #e6f0ff;
+}
+
+.notification-icon {
+  font-size: 24px;
+  color: #6c757d;
+}
+
+.notification-icon.booking {
+  color: #0d6efd;
+}
+
+.notification-icon.reminder {
+  color: #ffc107;
+}
+
+.notification-icon.system {
+  color: #198754;
+}
+
+.notification-icon.promo {
+  color: #6610f2;
+}
+
+.notification-icon.crowding {
+  color: #dc3545;
+}
+
+.notification-icon.low_load {
+  color: #198754;
+}
+
+.notification-message {
+  color: #6c757d;
+  font-size: 0.95rem;
+}

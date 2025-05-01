@@ -1,7 +1,6 @@
 // src/components/gyms/GymRating.jsx
 import React, { useState, useEffect } from 'react';
 import { Card, Form, Button, Spinner, Alert, ListGroup } from 'react-bootstrap';
-import 'bootstrap-icons/font/bootstrap-icons.css';
 import api from '../../services/api';
 import './GymRating.css'; 
 

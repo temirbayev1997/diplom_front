@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar, Nav, Container, Dropdown } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { BiBell, BiUser, BiDumbbell, BiCalendar, BiHomeAlt } from 'react-icons/bi';
+import { BiBell, BiUser, BiDumbbell, BiCalendar, BiHomeAlt, BiSpreadsheet } from 'react-icons/bi';
 import './Navbar.css';
 
 const AppNavbar = () => {
@@ -45,6 +45,10 @@ const AppNavbar = () => {
             </Nav.Link>
             <Nav.Link as={Link} to="/gyms" className="nav-link">
               <BiDumbbell className="nav-icon" /> Тренажерные залы
+            </Nav.Link>
+            {/* Добавляем ссылку на новую страницу статуса загруженности залов */}
+            <Nav.Link as={Link} to="/gym-load-status" className="nav-link">
+              <BiSpreadsheet className="nav-icon" /> Загруженность залов
             </Nav.Link>
             {isAuthenticated && (
               <Nav.Link as={Link} to="/bookings" className="nav-link">
