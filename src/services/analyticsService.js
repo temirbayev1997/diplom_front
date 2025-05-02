@@ -1,33 +1,33 @@
-// src/services/analyticsService.js (обновление)
+// src/services/analyticsService.js
 import api from './api';
 
-// Прогнозы загруженности
+// Прогнозы загруженности - правильные пути без дублирования '/api/v1'
 export const getPredictions = (gymId, date) => {
-  return api.get(`/api/v1/analytics/predictions/?gym=${gymId}&date=${date}`);
+  return api.get(`/analytics/predictions/?gym=${gymId}&date=${date}`);
 };
 
 export const getNextWeekPredictions = (gymId) => {
-  return api.get(`/api/v1/analytics/predictions/next_week/${gymId ? '?gym=' + gymId : ''}`);
+  return api.get(`/analytics/predictions/next_week/${gymId ? '?gym=' + gymId : ''}`);
 };
 
 // Отчеты о посещаемости
 export const getAttendanceReport = (gymId, startDate, endDate) => {
-  return api.get(`/api/v1/analytics/reports/attendance/?gym=${gymId}&start_date=${startDate}&end_date=${endDate}`);
+  return api.get(`/analytics/reports/attendance/?gym=${gymId}&start_date=${startDate}&end_date=${endDate}`);
 };
 
 // Анализ часов пик
 export const getPeakHours = (gymId, days = 30) => {
-  return api.get(`/api/v1/analytics/predictions/peak_hours/?gym=${gymId}&days=${days}`);
+  return api.get(`/analytics/predictions/peak_hours/?gym=${gymId}&days=${days}`);
 };
 
 // Сравнение залов
 export const getGymComparison = (days = 30) => {
-  return api.get(`/api/v1/analytics/predictions/gym_comparison/?days=${days}`);
+  return api.get(`/analytics/predictions/gym_comparison/?days=${days}`);
 };
 
 // Расширенная аналитика
 export const getExtendedAnalytics = (type = 'general', gymId, days = 30) => {
-  let url = `/api/v1/analytics/extended-analytics/?type=${type}&days=${days}`;
+  let url = `/analytics/extended-analytics/?type=${type}&days=${days}`;
   if (gymId) {
     url += `&gym=${gymId}`;
   }
@@ -36,29 +36,29 @@ export const getExtendedAnalytics = (type = 'general', gymId, days = 30) => {
 
 // Персональные рекомендации
 export const getRecommendations = () => {
-  return api.get('/api/v1/analytics/recommendations/');
+  return api.get('/analytics/recommendations/');
 };
 
 // Предпочтения пользователя
 export const getUserPreferences = () => {
-  return api.get('/api/v1/analytics/user-preferences/');
+  return api.get('/analytics/user-preferences/');
 };
 
 export const updateUserPreferences = (preferenceId, data) => {
-  return api.patch(`/api/v1/analytics/user-preferences/${preferenceId}/`, data);
+  return api.patch(`/analytics/user-preferences/${preferenceId}/`, data);
 };
 
 export const createUserPreferences = (data) => {
-  return api.post('/api/v1/analytics/user-preferences/', data);
+  return api.post('/analytics/user-preferences/', data);
 };
 
 // Рейтинги залов
 export const getGymRatings = (gymId) => {
-  return api.get(`/api/v1/analytics/gym-ratings/?gym=${gymId}`);
+  return api.get(`/analytics/gym-ratings/?gym=${gymId}`);
 };
 
 export const createOrUpdateRating = (data) => {
-  return api.post('/api/v1/analytics/gym-ratings/', data);
+  return api.post('/analytics/gym-ratings/', data);
 };
 
 export default {
