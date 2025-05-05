@@ -96,12 +96,21 @@ function AppRoutes() {
             } 
           />
           
-          <Route path="/gyms" element={<GymListPage />} />
-          <Route path="/gyms/:id" element={<GymDetailPage />} />
-          
-          {/* Добавляем новый маршрут для страницы состояния загруженности залов */}
-          <Route path="/gym-load-status" element={<GymLoadStatusPage />} />
-          
+          <Route 
+          path="/gyms" 
+          element=
+          {<GymListPage />} 
+          />
+          <Route 
+          path="/gyms/:id" 
+          element=
+          {<GymDetailPage />} 
+          />
+          <Route 
+          path="/gym-load-status" 
+          element=
+          {<GymLoadStatusPage />}
+           />
           <Route 
             path="/bookings" 
             element={
@@ -146,7 +155,6 @@ function AppRoutes() {
               </ProtectedRoute>
             } 
           />
-          
           {/* Обработка ошибки 404 */}
           <Route path="*" element={<div className="container py-5 text-center">
             <h1>404</h1>

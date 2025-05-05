@@ -19,6 +19,11 @@ export const getById = (id) => {
 export const getEquipment = (gymId) => {
   return api.get(`/api/v1/gyms/equipment/?gym=${gymId}`);
 };
+
+export const searchGymsByPost = (query) => {
+  return api.post('/api/v1/gyms/search/', { query });
+};
+
 const gymService = {
   getAll,
   searchByName,

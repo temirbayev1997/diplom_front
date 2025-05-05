@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { BiSearch, BiX, BiDumbbell } from 'react-icons/bi';
 import api from '../services/api';
 import './GymListPage.css';
-
+import { searchGymsByPost } from '../services/gymService';
 // URL API-эндпоинтов
 const API_ENDPOINTS = {
   GYMS: '/api/v1/gyms/',
@@ -110,26 +110,17 @@ const GymListPage = () => {
   };
 
 
-  const fetchGymsBySearch = async (query) => {
-    try {
-      setLoading(true);
-      // Используем только параметр search без search_fields, пока не исправим бэкенд
-      const response = await api.get(API_ENDPOINTS.GYMS, {
-        params: { search: query }
-      });
-      
-      if (response.data) {
-        setGyms(processGymData(response.data));
-      } else {
-        setGyms([]);
-      }
-    } catch (err) {
-      handleApiError(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+const fetchGymsBySearch = async (query) => {
+  try {
+    setLoading(true);
+    const response = await searchGymsByPost(query);
+    setGyms(Array.isArray(response.data) ? response.data : []);
+  } catch (err) {
+    handleApiError(err);
+  } finally {
+    setLoading(false);
+  }
+};
   const handleApiError = (err) => {
     console.error('API Error:', err);
     
