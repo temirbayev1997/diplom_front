@@ -194,26 +194,27 @@ const GymDetailPage = () => {
             </Tab>
             
             <Tab eventKey="equipment" title="Оборудование">
-              <Card className="side-card">
-                <Card.Body>
-                  <h5>Доступное оборудование</h5>
-                  {equipment.length === 0 ? (
-                    <Alert variant="info">Информация об оборудовании отсутствует</Alert>
-                  ) : (
-                    <div className="equipment-list">
-                      {equipment.map(item => (
-                        <div key={item.id} className="equipment-item d-flex justify-content-between align-items-center p-2 border-bottom">
-                          <div>
-                            <p className="mb-0 fw-bold">{item.name}</p>
-                            {item.description && <p className="small text-muted mb-0">{item.description}</p>}
-                          </div>
-                          <Badge bg="secondary">{item.quantity} шт.</Badge>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Card.Body>
-              </Card>
+            <Card className="side-card">
+  <Card.Body>
+    <h5>Доступное оборудование</h5>
+    {!Array.isArray(equipment) || equipment.length === 0 ? (
+      <Alert variant="info">Информация об оборудовании отсутствует</Alert>
+    ) : (
+      <div className="equipment-list">
+        {equipment.map(item => (
+          <div key={item.id} className="equipment-item d-flex justify-content-between align-items-center p-2 border-bottom">
+            <div>
+              <p className="mb-0 fw-bold">{item.name}</p>
+              {item.description && <p className="small text-muted mb-0">{item.description}</p>}
+            </div>
+            <Badge bg="secondary">{item.quantity} шт.</Badge>
+          </div>
+        ))}
+      </div>
+    )}
+  </Card.Body>
+</Card>
+
             </Tab>
           </Tabs>
           

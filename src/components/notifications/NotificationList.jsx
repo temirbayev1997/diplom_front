@@ -17,14 +17,19 @@ const NotificationList = () => {
     try {
       setLoading(true);
       const response = await api.get('/api/v1/notifications/');
-      setNotifications(response.data);
+  
+      // ✅ проверка на массив
+      const data = Array.isArray(response.data) ? response.data : [];
+      setNotifications(data);
     } catch (err) {
       console.error('Ошибка при загрузке уведомлений:', err);
       setError('Не удалось загрузить уведомления');
+      setNotifications([]); // fallback на случай ошибки
     } finally {
       setLoading(false);
     }
   };
+  
 
   const markAsRead = async (notificationId) => {
     try {
@@ -121,7 +126,7 @@ const NotificationList = () => {
     return <Alert variant="danger">{error}</Alert>;
   }
 
-  const unreadCount = notifications.filter(notification => !notification.is_read).length;
+  const unreadCount = (notifications || []).filter(n => !n.is_read).length;
 
   return (
     <div className="notification-list">

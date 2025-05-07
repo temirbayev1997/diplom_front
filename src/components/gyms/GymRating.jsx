@@ -14,6 +14,7 @@ const GymRating = ({ gymId }) => {
   const [success, setSuccess] = useState(null);
   const [editMode, setEditMode] = useState(false);
 
+
   useEffect(() => {
     if (gymId) {
       fetchRatings();
@@ -26,7 +27,9 @@ const GymRating = ({ gymId }) => {
       const response = await api.get(`/api/v1/analytics/gym-ratings/?gym=${gymId}`);
 
       if (response.data) {
-        setRatings(response.data);
+        const data = Array.isArray(response.data) ? response.data : [];
+        setRatings(data);
+
 
         const isAuthenticated = !!localStorage.getItem('token');
         if (isAuthenticated) {
@@ -100,11 +103,12 @@ const GymRating = ({ gymId }) => {
   };
 
   const calculateAverageRating = () => {
-    if (!ratings || ratings.length === 0) return 0;
-
+    if (!Array.isArray(ratings) || ratings.length === 0) return 0;
+  
     const sum = ratings.reduce((acc, rating) => acc + rating.rating, 0);
     return (sum / ratings.length).toFixed(1);
   };
+  
 
   const renderStars = (rating, interactive = false) => {
     return (

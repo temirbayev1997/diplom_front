@@ -21,21 +21,25 @@ const SubscriptionPage = () => {
     try {
       setLoading(true);
       setError('');
-      
-      // Получаем активные абонементы пользователя
+  
       const subscriptionsResponse = await getMySubscriptions();
-      setSubscriptions(subscriptionsResponse.data);
-      
-      // Получаем доступные планы абонементов
+      const data = Array.isArray(subscriptionsResponse.data) ? subscriptionsResponse.data : [];
+      setSubscriptions(data);
+  
       const plansResponse = await getMembershipPlans();
-      setAvailablePlans(plansResponse.data);
+      const plansData = Array.isArray(plansResponse.data) ? plansResponse.data : [];
+      setAvailablePlans(plansData);
+  
     } catch (err) {
       console.error('Ошибка при загрузке абонементов:', err);
       setError('Не удалось загрузить информацию об абонементах');
+      setSubscriptions([]);        // fallback
+      setAvailablePlans([]);       // fallback
     } finally {
       setLoading(false);
     }
   };
+  
 
   // Функция для форматирования даты
   const formatDate = (dateString) => {

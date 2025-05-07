@@ -18,14 +18,17 @@ const LoadHeatmap = ({ gymId }) => {
     try {
       setLoading(true);
       const response = await analyticsService.getNextWeekPredictions(gymId);
-      setPredictions(response.data);
+      const data = Array.isArray(response.data) ? response.data : [];
+      setPredictions(data);
     } catch (err) {
       console.error('Error fetching predictions:', err);
       setError('Не удалось загрузить данные о загруженности');
+      setPredictions([]); // <-- важно
     } finally {
       setLoading(false);
     }
   };
+  
 
   // Преобразуем данные для тепловой карты
   const processData = () => {
@@ -37,7 +40,7 @@ const LoadHeatmap = ({ gymId }) => {
     // Группируем по дням недели и часам
     const groupedData = {};
     
-    predictions.forEach(item => {
+    (predictions || []).forEach(item => {
       const date = new Date(item.date);
       const dayOfWeek = date.getDay(); // 0 - воскресенье, 1 - понедельник и т.д.
       const dayName = weekdays[dayOfWeek === 0 ? 6 : dayOfWeek - 1]; // Приводим к нашему формату (пн-вс)

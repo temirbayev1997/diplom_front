@@ -509,15 +509,12 @@ const ProfilePage = () => {
                         Здесь вы можете изменить настройки своего аккаунта.
                       </p>
                       
+                      <h5 className="mt-4">На данный момент вы не можете изменить пароль.</h5>
+                      <p className="text-muted">
+                        Для изменения пароля обратитесь к администратору.
+                      </p>
                       <div className="mb-4">
-                        <h6>Сменить пароль</h6>
-                        <Button variant="outline-primary" size="sm">
-                          Изменить пароль
-                        </Button>
-                      </div>
-                      
-                      <div className="mb-4">
-                        <h6>Уведомления</h6>
+                        <h6>Уведомления(Тест)</h6>
                         <Form.Check 
                           type="switch"
                           id="email-notifications"

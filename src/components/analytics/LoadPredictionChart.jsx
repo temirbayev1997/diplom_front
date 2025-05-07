@@ -25,28 +25,31 @@ ChartJS.register(
 );
 
 const LoadPredictionChart = ({ gymId, date }) => {
-  const [predictionData, setPredictionData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [predictionData, setPredictionData] = useState([]);
 
   useEffect(() => {
     const fetchPredictions = async () => {
       try {
         setLoading(true);
         const response = await analyticsService.getPredictions(gymId, date);
-        setPredictionData(response.data);
+        const data = Array.isArray(response.data) ? response.data : [];
+        setPredictionData(data);
       } catch (err) {
         console.error('Error fetching predictions:', err);
         setError('Не удалось загрузить прогноз загруженности');
+        setPredictionData([]); // <--- важно!
       } finally {
         setLoading(false);
       }
     };
-
+  
     if (gymId && date) {
       fetchPredictions();
     }
   }, [gymId, date]);
+  
 
   if (loading) {
     return (
@@ -68,11 +71,11 @@ const LoadPredictionChart = ({ gymId, date }) => {
 
   // Подготовка данных для графика
   const chartData = {
-    labels: predictionData.map(item => `${item.hour}:00`),
+    labels: (predictionData || []).map(item => `${item.hour}:00`),
     datasets: [
       {
         label: 'Прогнозируемая загруженность',
-        data: predictionData.map(item => item.predicted_load),
+        data: (predictionData || []).map(item => item.predicted_load),
         fill: false,
         backgroundColor: 'rgb(75, 192, 192)',
         borderColor: 'rgba(75, 192, 192, 0.6)',
