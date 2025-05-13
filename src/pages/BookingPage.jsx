@@ -15,11 +15,12 @@ const BookingPage = () => {
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      // Make API request
       const response = await api.get('api/v1/bookings/my-bookings/');
       
-      // Check if response.data is an array, if not initialize as empty array
-      const bookingsData = Array.isArray(response.data) ? response.data : [];
+      const bookingsData = Array.isArray(response.data)
+        ? response.data
+        : (Array.isArray(response.data.results) ? response.data.results : []);
+  
       setBookings(bookingsData);
     } catch (err) {
       console.error('Ошибка при загрузке бронирований:', err);
@@ -28,6 +29,7 @@ const BookingPage = () => {
       setLoading(false);
     }
   };
+  
 
   useEffect(() => {
     fetchBookings();
@@ -58,7 +60,7 @@ const BookingPage = () => {
     
     try {
       setCancellingBooking(true);
-      await api.patch(`/v1/bookings/${selectedBookingId}/`, { status: 'cancelled' });
+      await api.patch(`api/v1/bookings/${selectedBookingId}/`, { status: 'cancelled' });
       
       // Обновляем список бронирований после успешной отмены
       fetchBookings();

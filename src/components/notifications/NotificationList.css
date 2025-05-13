@@ -50,3 +50,6 @@
   color: #6c757d;
   font-size: 0.95rem;
 }
+.notification-list {
+  display: block; /* или ничего */
+}

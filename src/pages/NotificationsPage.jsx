@@ -38,7 +38,6 @@ const NotificationsPage = () => {
                   <NotificationList />
                 </Tab>
                 <Tab eventKey="unread" title="Непрочитанные">
-                  {/* Здесь можно передать фильтр в компонент NotificationList */}
                   <NotificationList filter="unread" />
                 </Tab>
               </Tabs>

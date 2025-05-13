@@ -4,7 +4,7 @@ import { ListGroup, Badge, Spinner, Button, Alert } from 'react-bootstrap';
 import api from '../../services/api';
 import './NotificationList.css';
 
-const NotificationList = () => {
+const NotificationList = ({ filter }) => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -17,19 +17,18 @@ const NotificationList = () => {
     try {
       setLoading(true);
       const response = await api.get('/api/v1/notifications/');
-  
-      // ✅ проверка на массив
-      const data = Array.isArray(response.data) ? response.data : [];
-      setNotifications(data);
+      const notifications = Array.isArray(response.data.results)
+        ? response.data.results
+        : [];
+      setNotifications(notifications);
     } catch (err) {
-      console.error('Ошибка при загрузке уведомлений:', err);
       setError('Не удалось загрузить уведомления');
-      setNotifications([]); // fallback на случай ошибки
     } finally {
       setLoading(false);
     }
   };
-  
+   
+  const unreadCount = notifications.filter(n => !n.is_read).length;
 
   const markAsRead = async (notificationId) => {
     try {
@@ -126,7 +125,9 @@ const NotificationList = () => {
     return <Alert variant="danger">{error}</Alert>;
   }
 
-  const unreadCount = (notifications || []).filter(n => !n.is_read).length;
+  const filteredNotifications = filter === 'unread'
+  ? notifications.filter(n => !n.is_read)
+  : notifications;
 
   return (
     <div className="notification-list">
@@ -134,13 +135,15 @@ const NotificationList = () => {
         <h5 className="mb-0">
           Уведомления
           {unreadCount > 0 && (
-            <Badge bg="primary" className="ms-2">{unreadCount}</Badge>
+            <Badge bg="primary" className="ms-2">
+              {unreadCount}
+            </Badge>
           )}
         </h5>
         {unreadCount > 0 && (
-          <Button 
-            variant="link" 
-            size="sm" 
+          <Button
+            variant="link"
+            size="sm"
             className="text-muted"
             onClick={markAllAsRead}
           >
@@ -148,27 +151,33 @@ const NotificationList = () => {
           </Button>
         )}
       </div>
-      
-      {notifications.length === 0 ? (
+
+      {filteredNotifications.length === 0 ? (
         <Alert variant="info">У вас нет уведомлений</Alert>
       ) : (
         <ListGroup variant="flush">
-          {notifications.map(notification => (
-            <ListGroup.Item 
-              key={notification.id} 
-              className={`notification-item ${!notification.is_read ? 'unread' : ''}`}
-              onClick={() => !notification.is_read && markAsRead(notification.id)}
+          {filteredNotifications.map(notification => (
+            <ListGroup.Item
+              key={notification.id}
+              className={`notification-item ${
+                !notification.is_read ? 'unread' : ''
+              }`}
+              onClick={() =>
+                !notification.is_read && markAsRead(notification.id)
+              }
             >
               <div className="d-flex">
-                <div className="me-3">
-                  {getNotificationIcon(notification.type)}
-                </div>
+                <div className="me-3">{getNotificationIcon(notification.type)}</div>
                 <div className="flex-grow-1">
                   <div className="d-flex justify-content-between align-items-start">
                     <h6 className="mb-1">{notification.title}</h6>
-                    <small className="text-muted">{formatCreatedAt(notification.created_at)}</small>
+                    <small className="text-muted">
+                      {formatCreatedAt(notification.created_at)}
+                    </small>
                   </div>
-                  <p className="mb-0 notification-message">{notification.message}</p>
+                  <p className="mb-0 notification-message">
+                    {notification.message}
+                  </p>
                 </div>
               </div>
             </ListGroup.Item>

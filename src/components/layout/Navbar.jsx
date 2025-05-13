@@ -3,26 +3,39 @@ import { Navbar, Nav, Container, Dropdown } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { BiBell, BiUser, BiDumbbell, BiCalendar, BiHomeAlt, BiSpreadsheet } from 'react-icons/bi';
 import './Navbar.css';
+import api from '../../services/api'; 
 
 const AppNavbar = () => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
-  const [notificationsCount, setNotificationsCount] = useState(3); // Для примера
+  const [notificationsCount, setNotificationsCount] = useState(0);
 
   useEffect(() => {
-    // Обновляем состояние при монтировании и при изменении localStorage
     const checkAuth = () => {
       setIsAuthenticated(!!localStorage.getItem('token'));
     };
 
-    window.addEventListener('storage', checkAuth);
+    const fetchUnreadNotifications = async () => {
+      try {
+        const response = await api.get('/api/v1/notifications/');
+        const data = Array.isArray(response.data.results) ? response.data.results : [];
+        const unreadCount = data.filter(n => !n.is_read).length;
+        setNotificationsCount(unreadCount);
+      } catch (err) {
+        console.error('Ошибка при загрузке уведомлений:', err);
+      }
+    };
+
     checkAuth();
 
-    return () => {
-      window.removeEventListener('storage', checkAuth);
-    };
+    if (localStorage.getItem('token')) {
+      fetchUnreadNotifications();
+    }
+
+    window.addEventListener('storage', checkAuth);
+    return () => window.removeEventListener('storage', checkAuth);
   }, []);
-  
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('refresh');
@@ -46,7 +59,6 @@ const AppNavbar = () => {
             <Nav.Link as={Link} to="/gyms" className="nav-link">
               <BiDumbbell className="nav-icon" /> Тренажерные залы
             </Nav.Link>
-            {/* Добавляем ссылку на новую страницу статуса загруженности залов */}
             <Nav.Link as={Link} to="/gym-load-status" className="nav-link">
               <BiSpreadsheet className="nav-icon" /> Загруженность залов
             </Nav.Link>
@@ -56,11 +68,11 @@ const AppNavbar = () => {
               </Nav.Link>
             )}
           </Nav>
-          
-          {isAuthenticated ? (
+
+          {isAuthenticated && (
             <div className="d-flex align-items-center">
               <div className="position-relative me-3">
-                <button 
+                <button
                   className="btn btn-light notification-button rounded-circle"
                   onClick={() => navigate('/notifications')}
                 >
@@ -72,7 +84,7 @@ const AppNavbar = () => {
                   )}
                 </button>
               </div>
-              
+
               <Dropdown align="end">
                 <Dropdown.Toggle variant="light" id="dropdown-user" className="user-dropdown">
                   <BiUser size={20} />
@@ -85,7 +97,7 @@ const AppNavbar = () => {
                 </Dropdown.Menu>
               </Dropdown>
             </div>
-          ) : null}
+          )}
         </Navbar.Collapse>
       </Container>
     </Navbar>
