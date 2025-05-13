@@ -19,6 +19,7 @@ const GymListPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchPerformed, setSearchPerformed] = useState(false);
 
   const processGymData = (data) => {
     // Преобразуем данные к стандартному формату
@@ -63,7 +64,8 @@ const GymListPage = () => {
       console.log('Ответ:', response);
       
       if (response.data) {
-        setGyms(Array.isArray(response.data) ? response.data : []);
+        const gyms = Array.isArray(response.data?.results) ? response.data.results : [];
+        setGyms(gyms);
       } else {
         setGyms([]);
       }
@@ -72,6 +74,7 @@ const GymListPage = () => {
       setError('Ошибка при загрузке залов. Подробности в консоли.');
     } finally {
       setLoading(false);
+      setSearchPerformed(false); // сбрасываем, если просто открыли список без фильтра
     }
   };
 
@@ -109,18 +112,22 @@ const GymListPage = () => {
     }
   };
 
-
-const fetchGymsBySearch = async (query) => {
-  try {
-    setLoading(true);
-    const response = await searchGymsByPost(query);
-    setGyms(Array.isArray(response.data) ? response.data : []);
-  } catch (err) {
-    handleApiError(err);
-  } finally {
-    setLoading(false);
-  }
-};
+  const fetchGymsBySearch = async (query) => {
+    try {
+      setLoading(true);
+      setSearchPerformed(true);
+      const response = await searchGymsByPost({ query });
+      const gyms = Array.isArray(response.data) ? response.data : [];
+      setGyms(gyms);
+    } catch (err) {
+      handleApiError(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  
+  
   const handleApiError = (err) => {
     console.error('API Error:', err);
     
@@ -184,7 +191,7 @@ const fetchGymsBySearch = async (query) => {
                 <BiSearch size={20} />
               </InputGroup.Text>
               <Form.Control
-                placeholder="Поиск по названию или адресу"
+                placeholder="Поиск по названию"
                 value={searchTerm}
                 onChange={handleSearchChange}
                 className="border-start-0"
@@ -201,9 +208,6 @@ const fetchGymsBySearch = async (query) => {
                 Найти
               </Button>
             </InputGroup>
-            <small className="text-muted d-block mt-2">
-              Для расширенного поиска используйте название и адрес
-            </small>
           </Form>
         </Col>
       </Row>
@@ -217,35 +221,45 @@ const fetchGymsBySearch = async (query) => {
       ) : error ? (
         <Alert variant="danger">{error}</Alert>
       ) : gyms.length === 0 ? (
-        <Alert variant="info">Залы не найдены</Alert>
-      ) : (
-        <Row>
-          {gyms.map(gym => (
-            <Col key={gym.id} md={4} className="mb-4">
-              <Card className="gym-card h-100">
-                {/* Содержимое карточки зала */}
-                <Card.Body className="d-flex flex-column">
-                  <Card.Title>{gym.name}</Card.Title>
-                  <Card.Text className="text-muted small">{gym.address}</Card.Text>
-                  <Card.Text>
-                    <small>Часы работы: {gym.opening_time?.slice(0, 5)} - {gym.closing_time?.slice(0, 5)}</small>
-                  </Card.Text>
-                  <Card.Text>
-                    Вместимость: {gym.capacity} чел.
-                  </Card.Text>
-                  <Button 
-                    variant="primary" 
-                    onClick={() => handleGymClick(gym.id)}
-                    className="mt-auto"
-                  >
-                    Подробнее
-                  </Button>
-                </Card.Body>
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      )}
+  <Alert variant="info">
+    {searchPerformed
+      ? `Ничего не найдено по запросу: "${searchTerm}"`
+      : "Залы не найдены"}
+  </Alert>
+) : (
+  <>
+    {searchPerformed && (
+      <Alert variant="success">
+        Найдено {gyms.length} зал(а/ов) по запросу: "<strong>{searchTerm}</strong>"
+      </Alert>
+    )}
+    <Row>
+      {gyms.map(gym => (
+        <Col key={gym.id} md={4} className="mb-4">
+          <Card className="gym-card h-100">
+            <Card.Body className="d-flex flex-column">
+              <Card.Title>{gym.name}</Card.Title>
+              <Card.Text className="text-muted small">{gym.address}</Card.Text>
+              <Card.Text>
+                <small>Часы работы: {gym.opening_time?.slice(0, 5)} - {gym.closing_time?.slice(0, 5)}</small>
+              </Card.Text>
+              <Card.Text>
+                Вместимость: {gym.capacity} чел.
+              </Card.Text>
+              <Button 
+                variant="primary" 
+                onClick={() => handleGymClick(gym.id)}
+                className="mt-auto"
+              >
+                Подробнее
+              </Button>
+            </Card.Body>
+          </Card>
+        </Col>
+      ))}
+    </Row>
+  </>
+)}
     </Container>
   );
 };

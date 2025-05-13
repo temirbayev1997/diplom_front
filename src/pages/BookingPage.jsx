@@ -16,7 +16,7 @@ const BookingPage = () => {
     try {
       setLoading(true);
       // Make API request
-      const response = await api.get('/v1/bookings/my-bookings/');
+      const response = await api.get('api/v1/bookings/my-bookings/');
       
       // Check if response.data is an array, if not initialize as empty array
       const bookingsData = Array.isArray(response.data) ? response.data : [];

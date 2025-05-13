@@ -20,8 +20,8 @@ export const getEquipment = (gymId) => {
   return api.get(`/api/v1/gyms/equipment/?gym=${gymId}`);
 };
 
-export const searchGymsByPost = (query) => {
-  return api.post('/api/v1/gyms/search/', { query });
+export const searchGymsByPost = (data) => {
+  return api.post('/api/v1/gyms/search/', data);
 };
 
 const gymService = {

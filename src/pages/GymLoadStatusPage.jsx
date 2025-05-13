@@ -11,100 +11,40 @@ const GymLoadStatusPage = () => {
   const [selectedHour, setSelectedHour] = useState('current'); // current or specific hour
   
   useEffect(() => {
-    // Fetch gyms list
-    fetchGyms();
-  }, []);
+    fetchAvailableGyms();
+  }, [selectedDay, selectedHour]);
   
-  useEffect(() => {
-    // When gyms are loaded, fetch prediction data
-    if (gyms.length > 0) {
-      fetchPredictions();
-    }
-  }, [gyms, selectedDay, selectedHour]);
-  
-  const fetchGyms = async () => {
+  const fetchAvailableGyms = async () => {
     try {
       setLoading(true);
-      // Используем правильный URL для получения списка залов
-      const response = await api.get('/api/v1/gyms/gyms/');
-      
-      if (response.data) {
-        console.log('Gym data received:', response.data);
-        setGyms(Array.isArray(response.data) ? response.data : []);
-      } else {
-        setGyms([]);
-      }
-    } catch (err) {
-      console.error('Ошибка при загрузке залов:', err);
-      setError('Не удалось загрузить список залов');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const fetchPredictions = async () => {
-    try {
-      setLoading(true);
-      
-      // Get current date and time for filtering
       const now = new Date();
-      const currentHour = now.getHours();
       const todayFormatted = now.toISOString().split('T')[0];
-      
-      // Calculate tomorrow's date
+  
       const tomorrow = new Date(now);
       tomorrow.setDate(tomorrow.getDate() + 1);
       const tomorrowFormatted = tomorrow.toISOString().split('T')[0];
-      
-      // Determine which hour to show
-      let hourFilter = currentHour;
-      if (selectedHour !== 'current') {
-        hourFilter = parseInt(selectedHour, 10);
-      }
-      
-      // Fetch predictions for all gyms
-      const loadDataMap = {};
-      
-      // Create requests for all gyms in parallel
-      const requests = gyms.map(gym => 
-        // Используем прямой путь к API прогнозов
-        api.get(`/api/v1/analytics/predictions/gym/${gym.id}/date/${selectedDay === 'today' ? todayFormatted : tomorrowFormatted}/`)
-      );
-      
-      console.log('Sending prediction requests for gyms:', gyms.map(g => g.id));
-      
-      // Execute all requests in parallel
-      const responses = await Promise.all(requests);
-      
-      // Process responses
-      responses.forEach((response, index) => {
-        const gymId = gyms[index].id;
-        
-        if (response.data && Array.isArray(response.data)) {
-          console.log(`Received data for gym ${gymId}:`, response.data);
-          
-          // Filter data for the selected hour
-          const hourData = response.data.find(item => item.hour === hourFilter);
-          
-          if (hourData) {
-            loadDataMap[gymId] = {
-              predicted_load: hourData.predicted_load,
-              capacity: gyms[index].capacity,
-              percentage: Math.round((hourData.predicted_load / gyms[index].capacity) * 100)
-            };
-          }
+  
+      let dateParam = selectedDay === 'today' ? todayFormatted : tomorrowFormatted;
+      let hour = selectedHour === 'current' ? now.getHours() : parseInt(selectedHour, 10);
+  
+      const response = await api.get('/api/v1/analytics/predictions/available-by-hour/', {
+        params: {
+          date: dateParam,
+          hour: hour,
         }
       });
-      
-      console.log('Processed load data:', loadDataMap);
-      setLoadData(loadDataMap);
+  
+      setGyms(response.data || []);
+      setError(null);
     } catch (err) {
-      console.error('Ошибка при загрузке данных загруженности:', err);
-      setError('Не удалось загрузить данные о загруженности залов');
+      console.error('Ошибка при загрузке загруженности залов:', err);
+      setError('Не удалось загрузить данные');
+      setGyms([]);
     } finally {
       setLoading(false);
     }
   };
+  
   
   // Function to get status badge based on percentage
   const getLoadStatusBadge = (percentage) => {
@@ -223,34 +163,30 @@ const GymLoadStatusPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {gyms.map((gym, index) => {
-                  const gymLoad = loadData[gym.id] || { predicted_load: 0, percentage: 0 };
-                  
-                  return (
-                    <tr key={gym.id}>
-                      <td>{index + 1}</td>
-                      <td>{gym.name}</td>
-                      <td>{gym.address}</td>
-                      <td>{gym.capacity} чел.</td>
-                      <td>
-                        <div className="d-flex align-items-center">
-                          <div className="progress flex-grow-1" style={{ height: '8px' }}>
-                            <div 
-                              className={`progress-bar bg-${gymLoad.percentage < 30 ? 'success' : gymLoad.percentage < 60 ? 'warning' : gymLoad.percentage < 85 ? 'danger' : 'dark'}`} 
-                              role="progressbar" 
-                              style={{ width: `${gymLoad.percentage}%` }} 
-                              aria-valuenow={gymLoad.percentage} 
-                              aria-valuemin="0" 
-                              aria-valuemax="100"
-                            ></div>
-                          </div>
-                          <span className="ms-2">{Math.round(gymLoad.predicted_load)} чел. ({gymLoad.percentage}%)</span>
+                {gyms.map((gym, index) => (
+                  <tr key={gym.gym_id}>
+                    <td>{index + 1}</td>
+                    <td>{gym.gym_name}</td>
+                    <td>{gym.address}</td>
+                    <td>{gym.capacity} чел.</td>
+                    <td>
+                      <div className="d-flex align-items-center">
+                        <div className="progress flex-grow-1" style={{ height: '8px' }}>
+                          <div 
+                            className={`progress-bar bg-${gym.percentage < 30 ? 'success' : gym.percentage < 60 ? 'warning' : gym.percentage < 85 ? 'danger' : 'dark'}`} 
+                            role="progressbar" 
+                            style={{ width: `${gym.percentage}%` }} 
+                            aria-valuenow={gym.percentage} 
+                            aria-valuemin="0" 
+                            aria-valuemax="100"
+                          ></div>
                         </div>
-                      </td>
-                      <td>{getLoadStatusBadge(gymLoad.percentage)}</td>
-                    </tr>
-                  );
-                })}
+                        <span className="ms-2">{Math.round(gym.predicted_load)} чел. ({gym.percentage}%)</span>
+                      </div>
+                    </td>
+                    <td>{getLoadStatusBadge(gym.percentage)}</td>
+                  </tr>
+                ))}
               </tbody>
             </Table>
           </Card.Body>

@@ -41,7 +41,7 @@ const BookingForm = ({ gymId, onSuccess, onCancel }) => {
     }
 
     try {
-      await api.post('/bookings/', formData);
+      await api.post('/api/v1/bookings/', formData);
       if (onSuccess) onSuccess();
     } catch (err) {
       console.error('Ошибка при создании бронирования:', err);

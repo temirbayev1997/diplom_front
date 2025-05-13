@@ -23,12 +23,17 @@ const SubscriptionPage = () => {
       setError('');
   
       const subscriptionsResponse = await getMySubscriptions();
-      const data = Array.isArray(subscriptionsResponse.data) ? subscriptionsResponse.data : [];
-      setSubscriptions(data);
+      const data = Array.isArray(subscriptionsResponse.data?.results)
+        ? subscriptionsResponse.data.results
+        : [];
+      setSubscriptions(data);      
   
       const plansResponse = await getMembershipPlans();
-      const plansData = Array.isArray(plansResponse.data) ? plansResponse.data : [];
-      setAvailablePlans(plansData);
+      const plans = Array.isArray(plansResponse.data?.results)
+        ? plansResponse.data.results
+        : [];
+      setAvailablePlans(plans);
+      
   
     } catch (err) {
       console.error('Ошибка при загрузке абонементов:', err);

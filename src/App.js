@@ -1,12 +1,9 @@
-// Обновленный маршрутизатор для App.js
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-// Компоненты макета
 import AppNavbar from './components/layout/Navbar';
 
-// Страницы
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -17,14 +14,12 @@ import ProfilePage from './pages/ProfilePage';
 import SubscriptionPage from './pages/SubscriptionPage';
 import AdminDashboard from './pages/AdminDashboard';
 import NotificationsPage from './pages/NotificationsPage';
-import GymLoadStatusPage from './pages/GymLoadStatusPage'; // Импортируем новую страницу
+import GymLoadStatusPage from './pages/GymLoadStatusPage'; 
 
-// Защищенный маршрут
 const ProtectedRoute = ({ children, adminRequired = false }) => {
   const isAuthenticated = localStorage.getItem('token');
   
-  // TODO: В реальном приложении необходимо проверять роль пользователя
-  // для adminRequired = true
+
   const isAdmin = localStorage.getItem('isAdmin') === 'true';
   
   if (!isAuthenticated) {
@@ -38,7 +33,6 @@ const ProtectedRoute = ({ children, adminRequired = false }) => {
   return children;
 };
 
-// Гостевой маршрут - для неавторизованных пользователей
 const GuestRoute = ({ children }) => {
   const isAuthenticated = localStorage.getItem('token');
   
@@ -54,7 +48,6 @@ function AppRoutes() {
   const [isAdmin, setIsAdmin] = useState(localStorage.getItem('isAdmin') === 'true');
 
   useEffect(() => {
-    // Добавляем обработчик события для отслеживания изменений в localStorage
     const handleStorageChange = () => {
       setIsAuthenticated(!!localStorage.getItem('token'));
       setIsAdmin(localStorage.getItem('isAdmin') === 'true');
@@ -62,7 +55,6 @@ function AppRoutes() {
 
     window.addEventListener('storage', handleStorageChange);
     
-    // Проверяем статус аутентификации при монтировании
     setIsAuthenticated(!!localStorage.getItem('token'));
     setIsAdmin(localStorage.getItem('isAdmin') === 'true');
 
@@ -155,7 +147,6 @@ function AppRoutes() {
               </ProtectedRoute>
             } 
           />
-          {/* Обработка ошибки 404 */}
           <Route path="*" element={<div className="container py-5 text-center">
             <h1>404</h1>
             <p className="lead">Страница не найдена</p>

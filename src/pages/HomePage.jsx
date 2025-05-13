@@ -23,18 +23,21 @@ const HomePage = () => {
     try {
       setLoading(true);
       const response = await api.get('/api/v1/gyms/');
-      if (response.data) {
-        // Ограничиваем количество залов на главной странице
-        const gymsData = Array.isArray(response.data) ? response.data.slice(0, 3) : [];
-        setPopularGyms(gymsData);
-      }
+      
+      const gymsArray = Array.isArray(response.data?.results)
+        ? response.data.results
+        : Array.isArray(response.data)
+          ? response.data
+          : [];
+  
+      setPopularGyms(gymsArray.slice(0, 3));
     } catch (err) {
       console.error('Ошибка при загрузке залов:', err);
       setError('Не удалось загрузить список популярных залов');
     } finally {
       setLoading(false);
     }
-  };
+  };  
 
   const handleSearch = (e) => {
     e.preventDefault();

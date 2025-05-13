@@ -6,10 +6,10 @@ const api = axios.create({
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
+        
     }
 });
 
-// Логирование запросов
 api.interceptors.request.use(
     (config) => {
         console.log("Отправка запроса:", {
@@ -31,7 +31,6 @@ api.interceptors.request.use(
     }
 );
 
-// Логирование ответов
 api.interceptors.response.use(
     (response) => {
         console.log("Получен ответ:", {
