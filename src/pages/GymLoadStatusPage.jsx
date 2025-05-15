@@ -7,8 +7,8 @@ const GymLoadStatusPage = () => {
   const [loadData, setLoadData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedDay, setSelectedDay] = useState('today'); // today, tomorrow, week
-  const [selectedHour, setSelectedHour] = useState('current'); // current or specific hour
+  const [selectedDay, setSelectedDay] = useState('today'); 
+  const [selectedHour, setSelectedHour] = useState('current'); 
   
   useEffect(() => {
     fetchAvailableGyms();
@@ -18,23 +18,28 @@ const GymLoadStatusPage = () => {
     try {
       setLoading(true);
       const now = new Date();
-      const todayFormatted = now.toISOString().split('T')[0];
-  
       const tomorrow = new Date(now);
       tomorrow.setDate(tomorrow.getDate() + 1);
-      const tomorrowFormatted = tomorrow.toISOString().split('T')[0];
   
-      let dateParam = selectedDay === 'today' ? todayFormatted : tomorrowFormatted;
-      let hour = selectedHour === 'current' ? now.getHours() : parseInt(selectedHour, 10);
+      const formatLocalDate = (dateObj) => {
+        return dateObj.toLocaleDateString('en-CA'); // формат YYYY-MM-DD
+      };
   
-      const response = await api.get('/api/v1/analytics/predictions/available-by-hour/', {
+      const todayFormatted = formatLocalDate(now);
+      const tomorrowFormatted = formatLocalDate(tomorrow);
+  
+      const dateParam = selectedDay === 'today' ? todayFormatted : tomorrowFormatted;
+      const hour = selectedHour === 'current' ? now.getHours() : parseInt(selectedHour, 10);
+  
+      const response = await api.get('/api/v1/analytics/predictions/by-hour/', {
         params: {
           date: dateParam,
           hour: hour,
-        }
+        },
       });
   
-      setGyms(response.data || []);
+      const data = Array.isArray(response.data) ? response.data : [];
+      setGyms(data);
       setError(null);
     } catch (err) {
       console.error('Ошибка при загрузке загруженности залов:', err);
@@ -46,7 +51,7 @@ const GymLoadStatusPage = () => {
   };
   
   
-  // Function to get status badge based on percentage
+  
   const getLoadStatusBadge = (percentage) => {
     if (percentage < 30) {
       return <Badge bg="success">Низкая загруженность</Badge>;
@@ -59,12 +64,10 @@ const GymLoadStatusPage = () => {
     }
   };
   
-  // Function to get current hour (for default selection)
   const getCurrentHour = () => {
     return new Date().getHours();
   };
   
-  // Generate hours array for the select input
   const hoursOptions = Array.from({ length: 24 }, (_, i) => {
     const hour = i.toString().padStart(2, '0');
     return { value: i, label: `${hour}:00` };
@@ -115,7 +118,7 @@ const GymLoadStatusPage = () => {
         <Col md={6}>
           <Card className="h-100">
             <Card.Body>
-              <h5 className="mb-3">Легенда</h5>
+              <h5 className="mb-3">Статус загруженности залов</h5>
               <div className="d-flex flex-wrap gap-3">
                 <div className="d-flex align-items-center">
                   <div style={{ width: '16px', height: '16px', backgroundColor: '#198754', borderRadius: '50%', marginRight: '8px' }}></div>
