@@ -3,6 +3,7 @@ import { Container, Row, Col, Card, Button, Badge, Spinner, Alert, ProgressBar, 
 import { BiCalendarCheck, BiTime, BiCheckSquare, BiDumbbell } from 'react-icons/bi';
 import { getMySubscriptions, getMembershipPlans, cancelSubscription } from '../services/subscriptionService';
 import './SubscriptionPage.css';
+import api from '../services/api';
 
 const SubscriptionPage = () => {
   const [subscriptions, setSubscriptions] = useState([]);
@@ -12,11 +13,29 @@ const SubscriptionPage = () => {
   const [cancelling, setCancelling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedSubscriptionId, setSelectedSubscriptionId] = useState(null);
-
+  const [gyms, setGyms] = useState([]);
+  const [selectedGymId, setSelectedGymId] = useState('');
+  const [selectedGymsByPlan, setSelectedGymsByPlan] = useState({});
+  
   useEffect(() => {
     fetchSubscriptions();
   }, []);
 
+  const fetchGyms = async () => {
+    try {
+      const response = await api.get('/api/v1/gyms/');
+      const data = Array.isArray(response.data?.results) ? response.data.results : [];
+      setGyms(data);
+    } catch (err) {
+      console.error('Ошибка при загрузке залов:', err);
+    }
+  };
+  
+  useEffect(() => {
+    fetchSubscriptions();
+    fetchGyms(); // не забудь вызвать!
+  }, []);
+  
   const fetchSubscriptions = async () => {
     try {
       setLoading(true);
@@ -45,7 +64,32 @@ const SubscriptionPage = () => {
     }
   };
   
-
+  const handleSubscribe = async (planId) => {
+    if (!selectedGymId) {
+      setError('Выберите зал перед оформлением абонемента.');
+      return;
+    }
+  
+    try {
+      setLoading(true);
+      const today = new Date().toISOString().split('T')[0];
+  
+      await api.post('/api/v1/subscriptions/', {
+        plan: planId,
+        start_date: today,
+        gym: selectedGymId,
+      });
+  
+      await fetchSubscriptions();
+    } catch (err) {
+      console.error('Ошибка при оформлении абонемента:', err.response?.data || err);
+      setError('Не удалось оформить абонемент. Попробуйте позже.');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  
   // Функция для форматирования даты
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
@@ -137,6 +181,18 @@ const SubscriptionPage = () => {
                       
                       {subscription.status === 'active' && (
                         <div className="text-end mb-3">
+                          <Form.Group className="mb-3">
+                            <Form.Label>Выберите зал</Form.Label>
+                            <Form.Select 
+                              value={selectedGymId} 
+                              onChange={(e) => setSelectedGymId(e.target.value)}
+                            >
+                              <option value="">-- Зал не выбран --</option>
+                              {gyms.map(gym => (
+                                <option key={gym.id} value={gym.id}>{gym.name}</option>
+                              ))}
+                            </Form.Select>
+                          </Form.Group>
                           <Button 
                             variant="outline-danger" 
                             size="sm"
@@ -225,9 +281,9 @@ const SubscriptionPage = () => {
                           </li>
                         </ul>
                         
-                        <div className="d-grid mt-4">
-                          <Button variant="outline-primary">Оформить абонемент</Button>
-                        </div>
+                        <Button variant="outline-primary" onClick={() => handleSubscribe(plan.id)}>
+                          Оформить абонемент
+                        </Button>
                       </Card.Body>
                     </Card>
                   </Col>
