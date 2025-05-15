@@ -93,14 +93,13 @@ const GymDetailPage = () => {
             <h1>{gym.name}</h1>
             <p className="text-muted">{gym.address}</p>
           </div>
-          
           <Card className="main-image-card mb-4">
-            {gym.image ? (
-              <Card.Img 
-                src={gym.image} 
-                alt={gym.name} 
-                className="gym-main-image" 
-              />
+          {gym.image_url ? (
+            <Card.Img 
+            src={gym.image_url} 
+            alt={gym.name} 
+            className="gym-main-image"
+            />
             ) : (
               <div className="default-main-image d-flex align-items-center justify-content-center">
                 <BiDumbbell size={64} />

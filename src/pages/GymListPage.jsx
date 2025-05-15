@@ -237,6 +237,21 @@ const GymListPage = () => {
       {gyms.map(gym => (
         <Col key={gym.id} md={4} className="mb-4">
           <Card className="gym-card h-100">
+            {gym.image_url ? (
+              <Card.Img 
+                variant="top" 
+                src={gym.image_url} 
+                alt={gym.name} 
+                style={{ height: '200px', objectFit: 'cover' }}
+              />
+            ) : (
+              <div className="default-image d-flex align-items-center justify-content-center" style={{ height: '200px' }}>
+                <div className="text-center">
+                  <BiDumbbell size={48} className="mb-2" />
+                  <p className="text-muted">Нет изображения</p>
+                </div>
+              </div>
+            )}
             <Card.Body className="d-flex flex-column">
               <Card.Title>{gym.name}</Card.Title>
               <Card.Text className="text-muted small">{gym.address}</Card.Text>

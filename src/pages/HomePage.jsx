@@ -173,8 +173,8 @@ const HomePage = () => {
               {popularGyms.map(gym => (
                 <Col key={gym.id} md={4} className="mb-4">
                   <Card className="gym-card h-100">
-                    {gym.image ? (
-                      <Card.Img variant="top" src={gym.image} style={{ height: '200px', objectFit: 'cover' }} />
+                    {gym.image_url ? (
+                      <Card.Img variant="top" src={gym.image_url} style={{ height: '200px', objectFit: 'cover' }} />
                     ) : (
                       <div className="default-image d-flex align-items-center justify-content-center" style={{ height: '200px' }}>
                         <div className="text-center">
