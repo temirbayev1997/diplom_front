@@ -15,9 +15,11 @@ const SubscriptionPage = () => {
   const [selectedSubscriptionId, setSelectedSubscriptionId] = useState(null);
   const [gyms, setGyms] = useState([]);
   const [selectedGymsByPlan, setSelectedGymsByPlan] = useState({});
-  
+  const [paymentMethodByPlan, setPaymentMethodByPlan] = useState({});
+
   useEffect(() => {
     fetchSubscriptions();
+    fetchGyms();
   }, []);
 
   const fetchGyms = async () => {
@@ -29,59 +31,61 @@ const SubscriptionPage = () => {
       console.error('Ошибка при загрузке залов:', err);
     }
   };
-  
-  useEffect(() => {
-    fetchSubscriptions();
-    fetchGyms(); // не забудь вызвать!
-  }, []);
-  
+
   const fetchSubscriptions = async () => {
     try {
       setLoading(true);
       setError('');
-  
+
       const subscriptionsResponse = await getMySubscriptions();
       const data = Array.isArray(subscriptionsResponse.data?.results)
         ? subscriptionsResponse.data.results
         : [];
-      setSubscriptions(data);      
-  
+      setSubscriptions(data);
+
       const plansResponse = await getMembershipPlans();
       const plans = Array.isArray(plansResponse.data?.results)
         ? plansResponse.data.results
         : [];
       setAvailablePlans(plans);
-      
-  
+
     } catch (err) {
       console.error('Ошибка при загрузке абонементов:', err);
       setError('Не удалось загрузить информацию об абонементах');
-      setSubscriptions([]);        // fallback
-      setAvailablePlans([]);       // fallback
+      setSubscriptions([]);
+      setAvailablePlans([]);
     } finally {
       setLoading(false);
     }
   };
-  
+
   const handleSubscribe = async (planId) => {
     const gymId = selectedGymsByPlan[planId];
+    const paymentMethod = paymentMethodByPlan[planId] || 'cash';
+
     if (!gymId) {
       setError('Выберите зал перед оформлением абонемента.');
       return;
     }
 
-  
     try {
       setLoading(true);
       const today = new Date().toISOString().split('T')[0];
-  
-      await api.post('/api/v1/subscriptions/', {
+
+      const subResponse = await api.post('/api/v1/subscriptions/', {
         plan: planId,
         start_date: today,
         gym: gymId,
       });
-      
-  
+
+      const subscriptionId = subResponse?.data?.id;
+
+      if (subscriptionId) {
+        await api.post(`/api/v1/payments/for-subscription/${subscriptionId}/`, {
+          method: paymentMethod,
+        });
+      }
+
       await fetchSubscriptions();
     } catch (err) {
       console.error('Ошибка при оформлении абонемента:', err.response?.data || err);
@@ -90,15 +94,12 @@ const SubscriptionPage = () => {
       setLoading(false);
     }
   };
-  
-  
-  // Функция для форматирования даты
+
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('ru-RU', options);
   };
 
-  // Функция для расчета оставшихся дней абонемента
   const calculateDaysLeft = (endDate) => {
     const today = new Date();
     const end = new Date(endDate);
@@ -107,17 +108,12 @@ const SubscriptionPage = () => {
     return diffDays > 0 ? diffDays : 0;
   };
 
-  // Функция для получения статуса в виде badge
   const getStatusBadge = (status) => {
     switch (status) {
-      case 'active':
-        return <Badge bg="success">Активный</Badge>;
-      case 'expired':
-        return <Badge bg="secondary">Истёк</Badge>;
-      case 'cancelled':
-        return <Badge bg="danger">Отменен</Badge>;
-      default:
-        return <Badge bg="info">{status}</Badge>;
+      case 'active': return <Badge bg="success">Активный</Badge>;
+      case 'expired': return <Badge bg="secondary">Истёк</Badge>;
+      case 'cancelled': return <Badge bg="danger">Отменен</Badge>;
+      default: return <Badge bg="info">{status}</Badge>;
     }
   };
 
@@ -128,12 +124,9 @@ const SubscriptionPage = () => {
 
   const handleCancelSubscription = async () => {
     if (!selectedSubscriptionId) return;
-    
     try {
       setCancelling(true);
       await cancelSubscription(selectedSubscriptionId);
-      
-      // Обновляем список подписок после успешной отмены
       await fetchSubscriptions();
       setShowCancelModal(false);
     } catch (err) {
@@ -147,95 +140,66 @@ const SubscriptionPage = () => {
   return (
     <Container className="py-5">
       <h1 className="mb-4">Мои абонементы</h1>
-      
+
       {loading ? (
-  <div className="text-center my-5">
-    <Spinner animation="border" variant="primary" />
-    <p className="mt-3">Загрузка абонементов...</p>
-  </div>
-) : error ? (
-  <Alert variant="danger">{error}</Alert>
-) : (
-  <>
-    {subscriptions.length === 0 ? (
-      <Card className="text-center p-4">
-        <Card.Body>
-          <BiDumbbell size={60} className="text-primary mb-3" />
-          <h4>У вас пока нет активных абонементов</h4>
-          <p className="text-muted">
-            Приобретите абонемент, чтобы получить неограниченный доступ к залам и дополнительные преимущества
-          </p>
-          <Button variant="primary" href="#available-plans">
-            Выбрать абонемент
-          </Button>
-        </Card.Body>
-      </Card>
-    ) : (
-      <Row>
-        {subscriptions.map(subscription => (
-          <Col key={subscription.id} md={6} lg={4} className="mb-4">
-            <Card className="subscription-card">
-              <Card.Body>
-                <div className="d-flex justify-content-between align-items-start mb-3">
-                  <h5 className="mb-0">{subscription.plan_details?.name || 'Абонемент'}</h5>
-                  {getStatusBadge(subscription.status)}
-                </div>
-
-                {subscription.status === 'active' && (
-                  <div className="text-end mb-3">
-                    <Button 
-                      variant="outline-danger" 
-                      size="sm"
-                      onClick={() => handleShowCancelModal(subscription.id)}
-                    >
-                      Отменить абонемент
-                    </Button>
-                  </div>
-                )}
-
-                <p className="text-muted mb-3">{subscription.gym_details?.name || 'Тренажерный зал'}</p>
-
-                {subscription.status === 'active' && (
-                  <div className="mb-3">
-                    <small className="text-muted d-block mb-1">
-                      Осталось дней: {calculateDaysLeft(subscription.end_date)}
-                    </small>
-                    <ProgressBar 
-                      now={calculateDaysLeft(subscription.end_date)} 
-                      max={subscription.plan_details?.duration_days || 30} 
-                      variant="primary" 
-                    />
-                  </div>
-                )}
-
-                <div className="subscription-details">
-                  <div className="subscription-detail-item">
-                    <BiCalendarCheck className="text-primary" />
-                    <div>
-                      <small className="text-muted">Срок действия</small>
-                      <p>{formatDate(subscription.start_date)} - {formatDate(subscription.end_date)}</p>
-                    </div>
-                  </div>
-
-                  {subscription.visits_left !== null && (
-                    <div className="subscription-detail-item">
-                      <BiCheckSquare className="text-primary" />
-                      <div>
-                        <small className="text-muted">Осталось посещений</small>
-                        <p>{subscription.visits_left}</p>
+        <div className="text-center my-5">
+          <Spinner animation="border" variant="primary" />
+          <p className="mt-3">Загрузка абонементов...</p>
+        </div>
+      ) : error ? (
+        <Alert variant="danger">{error}</Alert>
+      ) : (
+        <>
+          <Row>
+            {availablePlans.map(plan => (
+              <Col key={plan.id} md={6} lg={4} className="mb-4">
+                <Card className="plan-card">
+                  <Card.Body>
+                    <div className="text-center mb-3">
+                      <h5>{plan.name}</h5>
+                      <div className="plan-price">
+                        <span className="amount">{plan.price} ₽</span>
+                        <span className="period">/ {plan.duration_days} дней</span>
                       </div>
                     </div>
-                  )}
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-        ))}
-      </Row>
-    )}
-  </>
-)} 
-      {/* Модальное окно подтверждения отмены абонемента */}
+                    <Form.Group className="mb-3">
+                      <Form.Label>Зал</Form.Label>
+                      <Form.Select
+                        value={selectedGymsByPlan[plan.id] || ''}
+                        onChange={(e) =>
+                          setSelectedGymsByPlan(prev => ({ ...prev, [plan.id]: e.target.value }))
+                        }
+                      >
+                        <option value="">-- Зал не выбран --</option>
+                        {gyms.map(gym => (
+                          <option key={gym.id} value={gym.id}>{gym.name}</option>
+                        ))}
+                      </Form.Select>
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Метод оплаты</Form.Label>
+                      <Form.Select
+                        value={paymentMethodByPlan[plan.id] || 'cash'}
+                        onChange={(e) =>
+                          setPaymentMethodByPlan(prev => ({ ...prev, [plan.id]: e.target.value }))
+                        }
+                      >
+                        <option value="cash">Наличные</option>
+                        <option value="card">Карта</option>
+                        <option value="paypal">PayPal</option>
+                      </Form.Select>
+                    </Form.Group>
+                    <Button variant="outline-primary" onClick={() => handleSubscribe(plan.id)}>
+                      Оформить абонемент
+                    </Button>
+                  </Card.Body>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        </>
+      )}
+
       <Modal show={showCancelModal} onHide={() => setShowCancelModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Подтверждение отмены</Modal.Title>
@@ -251,14 +215,7 @@ const SubscriptionPage = () => {
           <Button variant="danger" onClick={handleCancelSubscription} disabled={cancelling}>
             {cancelling ? (
               <>
-                <Spinner
-                  as="span"
-                  animation="border"
-                  size="sm"
-                  role="status"
-                  aria-hidden="true"
-                  className="me-2"
-                />
+                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
                 Отмена...
               </>
             ) : (
