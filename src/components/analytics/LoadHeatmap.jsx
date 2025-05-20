@@ -15,19 +15,23 @@ const LoadHeatmap = ({ gymId }) => {
   }, [gymId, selectedWeek]);
 
   const fetchPredictions = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const response = await analyticsService.getNextWeekPredictions(gymId);
-      const data = Array.isArray(response.data) ? response.data : [];
-      setPredictions(data);
+      let response;
+      if (selectedWeek === 'current') {
+        response = await analyticsService.getCurrentWeekPredictions(gymId);
+      } else {
+        response = await analyticsService.getNextWeekPredictions(gymId); 
+      }
+      setPredictions(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
-      console.error('Error fetching predictions:', err);
       setError('Не удалось загрузить данные о загруженности');
-      setPredictions([]); // <-- важно
+      setPredictions([]);
     } finally {
       setLoading(false);
     }
   };
+  
   
 
   // Преобразуем данные для тепловой карты

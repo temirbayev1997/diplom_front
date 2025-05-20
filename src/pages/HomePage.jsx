@@ -206,18 +206,6 @@ const HomePage = () => {
           </div>
         </Col>
       </Row>
-
-      <Row className="mb-5">
-        <Col>
-          <div className="cta-section p-5 text-center rounded">
-            <h2 className="mb-4">Готовы начать тренировки?</h2>
-            <p className="lead mb-4">Найдите подходящий зал прямо сейчас и забронируйте свое время</p>
-            <Button variant="primary" size="lg" as={Link} to="/gyms">
-              Найти зал
-            </Button>
-          </div>
-        </Col>
-      </Row>
     </Container>
   );
 };

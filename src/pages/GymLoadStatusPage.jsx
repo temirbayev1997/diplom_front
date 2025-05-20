@@ -4,16 +4,27 @@ import api from '../services/api';
 
 const GymLoadStatusPage = () => {
   const [gyms, setGyms] = useState([]);
-  const [loadData, setLoadData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedDay, setSelectedDay] = useState('today'); 
   const [selectedHour, setSelectedHour] = useState('current'); 
+  const [selectedRange, setSelectedRange] = useState('0-3');
+
   
   useEffect(() => {
     fetchAvailableGyms();
-  }, [selectedDay, selectedHour]);
-  
+  }, [selectedDay, selectedRange]);
+
+  const hourRanges = Array.from({ length: 8 }, (_, i) => {
+    const startHour = i * 3;
+    const endHour = (i + 1) * 3;
+    const format = (h) => h.toString().padStart(2, '0') + ':00';
+    return {
+      value: `${startHour}-${endHour === 24 ? 0 : endHour}`,
+      label: `${format(startHour)} - ${format(endHour === 24 ? 0 : endHour)}`
+    };
+  });  
+
   const fetchAvailableGyms = async () => {
     try {
       setLoading(true);
@@ -21,22 +32,25 @@ const GymLoadStatusPage = () => {
       const tomorrow = new Date(now);
       tomorrow.setDate(tomorrow.getDate() + 1);
   
-      const formatLocalDate = (dateObj) => {
-        return dateObj.toLocaleDateString('en-CA'); // формат YYYY-MM-DD
-      };
-  
+      const formatLocalDate = (dateObj) => dateObj.toLocaleDateString('en-CA');
       const todayFormatted = formatLocalDate(now);
       const tomorrowFormatted = formatLocalDate(tomorrow);
-  
       const dateParam = selectedDay === 'today' ? todayFormatted : tomorrowFormatted;
-      const hour = selectedHour === 'current' ? now.getHours() : parseInt(selectedHour, 10);
   
-      const response = await api.get('/api/v1/analytics/predictions/by-hour/', {
+      let hourParam;
+      if (selectedHour === 'current') {
+        hourParam = now.getHours();
+      } else {
+        // Если выбран диапазон
+        hourParam = parseInt(selectedHour.split('-')[0], 10); // Только начало диапазона!
+      }
+  
+      const response = await api.get('/api/v1/analytics/predictions/by-interval/', {
         params: {
           date: dateParam,
-          hour: hour,
+          interval: selectedRange
         },
-      });
+      });      
   
       const data = Array.isArray(response.data) ? response.data : [];
       setGyms(data);
@@ -99,13 +113,12 @@ const GymLoadStatusPage = () => {
                   <Col md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label>Время</Form.Label>
-                      <Form.Select 
-                        value={selectedHour} 
-                        onChange={(e) => setSelectedHour(e.target.value)}
+                      <Form.Select
+                        value={selectedRange}
+                        onChange={e => setSelectedRange(e.target.value)}
                       >
-                        <option value="current">Текущий час ({getCurrentHour()}:00)</option>
-                        {hoursOptions.map(hour => (
-                          <option key={hour.value} value={hour.value}>{hour.label}</option>
+                        {hourRanges.map(range => (
+                          <option key={range.value} value={range.value}>{range.label}</option>
                         ))}
                       </Form.Select>
                     </Form.Group>

@@ -15,6 +15,7 @@ import SubscriptionPage from './pages/SubscriptionPage';
 import AdminDashboard from './pages/AdminDashboard';
 import NotificationsPage from './pages/NotificationsPage';
 import GymLoadStatusPage from './pages/GymLoadStatusPage'; 
+import CombinedSubscriptionsAndBookings from './pages/CombinedSubscriptionsAndBookings';
 
 const ProtectedRoute = ({ children, adminRequired = false }) => {
   const isAuthenticated = localStorage.getItem('token');
@@ -86,6 +87,14 @@ function AppRoutes() {
                 <RegisterPage />
               </GuestRoute>
             } 
+          />
+          <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <CombinedSubscriptionsAndBookings />
+            </ProtectedRoute>
+          }
           />
           
           <Route 

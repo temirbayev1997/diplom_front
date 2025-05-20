@@ -1,15 +1,23 @@
 
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Tab, Tabs, Image } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Tab, Tabs, Image, Modal } from 'react-bootstrap';
 import { BiUser, BiEnvelope, BiPhone, BiCalendar, BiHome, BiEdit } from 'react-icons/bi';
 import api from '../services/api';
 import './ProfilePage.css';
-import PersonalRecommendations from '../components/analytics/PersonalRecommedations';
+import UserPayments from '../components/payments/UserPayments';
+import AddCardForm from '../components/payments/AddCardForm';
+import SavedCardList from '../components/payments/SavedCardList';
 
 const ProfilePage = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('bio');
   const [error, setError] = useState('');
+  const [cardsVersion, setCardsVersion] = useState(0);
+  const [showAddCard, setShowAddCard] = useState(false);
+  const [mySubs, setMySubs] = useState([]);
+  const [mySubsLoading, setMySubsLoading] = useState(true);
+  const [mySubsError, setMySubsError] = useState('');
   const [success, setSuccess] = useState('');
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -32,7 +40,31 @@ const ProfilePage = () => {
     fetchUserProfile();
     fetchUserPreferences();
   }, []);
+  const handleCardAdded = () => {
+    setCardsVersion(v => v + 1);
+    setShowAddCard(false); // Закрыть модалку после успешного добавления
+  };  
 
+  useEffect(() => {
+    fetchUserProfile();
+    fetchUserPreferences();
+    fetchMySubscriptions();
+  }, []);
+  
+  const fetchMySubscriptions = async () => {
+    setMySubsLoading(true); setMySubsError('');
+    try {
+      const res = await api.get('/api/v1/subscriptions/my-subscriptions/');
+      const arr = Array.isArray(res.data?.results) ? res.data.results : res.data;
+      setMySubs(arr);
+    } catch {
+      setMySubsError('Ошибка при загрузке абонементов');
+    } finally {
+      setMySubsLoading(false);
+    }
+  };
+
+  
   const fetchUserProfile = async () => {
     try {
       setLoading(true);
@@ -382,112 +414,58 @@ const ProfilePage = () => {
                 </Card.Body>
               </Card>
             ) : (
-              <Tabs defaultActiveKey="recommendations" className="mb-3">
-                <Tab eventKey="recommendations" title="Рекомендации">
-                  <Card className="mb-4">
-                    <Card.Body>
-                      <PersonalRecommendations />
-                    </Card.Body>
-                  </Card>
-                  <Card>
-                    <Card.Body>
-                      <h5 className="mb-3">Мои предпочтения</h5>
-                      <Form>
-                        <Row>
-                          <Col md={6}>
-                            <Form.Group className="mb-3">
-                              <Form.Label>Предпочитаемый зал</Form.Label>
-                              <Form.Select
-                                name="preferred_gym"
-                                value={preference.preferred_gym || ''}
-                                onChange={handlePreferenceChange}
-                              >
-                                <option value="">Выберите зал</option>
-                                {/* Здесь будет список залов из API */}
-                              </Form.Select>
-                            </Form.Group>
-                          </Col>
-                          <Col md={6}>
-                            <Form.Group className="mb-3">
-                              <Form.Label>Предпочитаемый день недели</Form.Label>
-                              <Form.Select
-                                name="preferred_day"
-                                value={preference.preferred_day || ''}
-                                onChange={handlePreferenceChange}
-                              >
-                                <option value="">Любой день</option>
-                                <option value="0">Понедельник</option>
-                                <option value="1">Вторник</option>
-                                <option value="2">Среда</option>
-                                <option value="3">Четверг</option>
-                                <option value="4">Пятница</option>
-                                <option value="5">Суббота</option>
-                                <option value="6">Воскресенье</option>
-                              </Form.Select>
-                            </Form.Group>
-                          </Col>
-                        </Row>
-                        
-                        <Row>
-                          <Col md={6}>
-                            <Form.Group className="mb-3">
-                              <Form.Label>Предпочитаемое время</Form.Label>
-                              <Form.Select
-                                name="preferred_hour"
-                                value={preference.preferred_hour || ''}
-                                onChange={handlePreferenceChange}
-                              >
-                                <option value="">Любое время</option>
-                                {[...Array(24)].map((_, i) => (
-                                  <option key={i} value={i}>{i}:00</option>
-                                ))}
-                              </Form.Select>
-                            </Form.Group>
-                          </Col>
-                          <Col md={6}>
-                            <Form.Group className="mb-3 mt-4">
-                              <Form.Check
-                                type="checkbox"
-                                id="avoid-crowded"
-                                label="Избегать загруженных часов"
-                                name="avoid_crowded"
-                                checked={preference.avoid_crowded}
-                                onChange={handlePreferenceChange}
-                              />
-                            </Form.Group>
-                          </Col>
-                        </Row>
-                        
-                        <div className="d-flex justify-content-end">
-                          <Button 
-                            variant="primary"
-                            onClick={handleSavePreferences}
-                            disabled={loading}
-                          >
-                            Сохранить предпочтения
-                          </Button>
-                        </div>
-                      </Form>
-                    </Card.Body>
-                  </Card>
-                </Tab>
-                
+              <Tabs
+                activeKey={activeTab}
+                onSelect={setActiveTab}
+                className="mb-4"
+              >
                 <Tab eventKey="activity" title="Активность">
-                  <Card>
-                    <Card.Body>
-                      <h5>Ваша активность</h5>
-                      <p className="text-muted">
-                        Здесь отображается история ваших тренировок и посещений.
-                      </p>
-                      
-                      <div className="text-center my-4">
-                        <p>У вас пока нет данных об активности</p>
-                        <Button variant="outline-primary" href="/gyms">Найти зал для тренировки</Button>
-                      </div>
-                    </Card.Body>
-                  </Card>
-                </Tab>
-                
+  <Card>
+    <Card.Body>
+      <h6 className="mt-2 mb-3">Ваши абонементы</h6>
+      {mySubsLoading ? (
+        <Spinner animation="border" size="sm" />
+      ) : mySubsError ? (
+        <Alert variant="danger" className="py-1">{mySubsError}</Alert>
+      ) : mySubs.length > 0 ? (
+        <Row>
+          {mySubs.slice(0, 3).map(sub => (
+            <Col key={sub.id} md={4} className="mb-3">
+              <Card className="h-100">
+                <Card.Body>
+                  <div className="fw-bold">{sub.plan_details?.name || 'Абонемент'}</div>
+                  <div className="small text-muted">{sub.gym_details?.name || 'Зал не указан'}</div>
+                  <div className="small">C {sub.start_date} по {sub.end_date}</div>
+                  <div className="small">
+                    Статус:&nbsp;
+                    <span className={
+                      sub.status === 'active' ? 'text-success' :
+                      sub.status === 'expired' ? 'text-secondary' :
+                      sub.status === 'cancelled' ? 'text-danger' : ''
+                    }>
+                      {sub.status === 'active' ? 'Активный' : sub.status === 'expired' ? 'Истёк' : 'Отменён'}
+                    </span>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      ) : (
+        <>
+          <h5>Ваша активность</h5>
+          <p className="text-muted">
+            Здесь отображается история ваших тренировок и посещений.
+          </p>
+          <div className="text-center my-4">
+            <p>У вас пока нет данных об активности</p>
+            <Button variant="outline-primary" href="/gyms">Найти зал для тренировки</Button>
+          </div>
+        </>
+      )}
+    </Card.Body>
+  </Card>
+</Tab>          
                 <Tab eventKey="bio" title="О себе">
                   <Card>
                     <Card.Body>
@@ -495,8 +473,16 @@ const ProfilePage = () => {
                       {profile?.bio ? (
                         <p>{profile.bio}</p>
                       ) : (
-                        <p className="text-muted">Биография не заполнена. Нажмите "Редактировать профиль", чтобы добавить информацию о себе.</p>
+                        <p className="text-muted">Биография не заполнена.</p>
                       )}
+                      <Button
+                        variant="outline-primary"
+                        size="sm"
+                        className="mt-3"
+                        onClick={() => setEditing(true)}
+                      >
+                        <BiEdit className="me-1" /> Редактировать биографию
+                      </Button>
                     </Card.Body>
                   </Card>
                 </Tab>
@@ -525,7 +511,38 @@ const ProfilePage = () => {
                     </Card.Body>
                   </Card>
                 </Tab>
-              </Tabs>
+                <Tab eventKey="payments" title="Мои покупки">
+    <Card>
+      <Card.Body>
+        <h5 className="mb-3">История покупок</h5>
+        <UserPayments />
+      </Card.Body>
+    </Card>
+  </Tab>
+  <Tab eventKey="cards" title="Мои карты">
+  <Card>
+    <Card.Body>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h5 className="mb-0">Сохранённые карты</h5>
+        <Button variant="outline-primary" onClick={() => setShowAddCard(true)}>
+          Добавить карту
+        </Button>
+      </div>
+      <SavedCardList key={cardsVersion} />
+
+      <Modal show={showAddCard} onHide={() => setShowAddCard(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Добавить карту</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <AddCardForm onCardAdded={handleCardAdded} />
+        </Modal.Body>
+      </Modal>
+    </Card.Body>
+  </Card>
+</Tab>
+
+</Tabs>
             )}
           </Col>
         </Row>

@@ -62,11 +62,6 @@ const AppNavbar = () => {
             <Nav.Link as={Link} to="/gym-load-status" className="nav-link">
               <BiSpreadsheet className="nav-icon" /> Загруженность залов
             </Nav.Link>
-            {isAuthenticated && (
-              <Nav.Link as={Link} to="/bookings" className="nav-link">
-                <BiCalendar className="nav-icon" /> Мои бронирования
-              </Nav.Link>
-            )}
           </Nav>
 
           {isAuthenticated && (
@@ -91,7 +86,7 @@ const AppNavbar = () => {
                 </Dropdown.Toggle>
                 <Dropdown.Menu>
                   <Dropdown.Item as={Link} to="/profile">Мой профиль</Dropdown.Item>
-                  <Dropdown.Item as={Link} to="/subscriptions">Мои абонементы</Dropdown.Item>
+                  <Dropdown.Item as={Link} to="/dashboard">Мои бронирование</Dropdown.Item>
                   <Dropdown.Divider />
                   <Dropdown.Item onClick={handleLogout}>Выйти</Dropdown.Item>
                 </Dropdown.Menu>

@@ -138,7 +138,15 @@ const GymDetailPage = () => {
                   onClick={handleBookingClick}
                   disabled={showBookingForm}
                 >
-                  Забронировать
+                  Забронировать место
+                </Button>
+                <Button
+                  variant="outline-primary"
+                  size="lg"
+                  onClick={() => navigate(`/subscriptions?gym=${id}`)}
+                  className="mt-2"
+                >
+                  Купить абонемент
                 </Button>
               </div>
             </Card.Body>

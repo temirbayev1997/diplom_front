@@ -1,231 +1,251 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Badge, Spinner, Alert, ProgressBar, Modal, Form } from 'react-bootstrap';
-import { BiCalendarCheck, BiTime, BiCheckSquare, BiDumbbell } from 'react-icons/bi';
-import { getMySubscriptions, getMembershipPlans, cancelSubscription } from '../services/subscriptionService';
-import './SubscriptionPage.css';
+import { Container, Tab, Tabs, Row, Col, Card, Button, Spinner, Alert, Modal, Form } from 'react-bootstrap';
 import api from '../services/api';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-const SubscriptionPage = () => {
-  const [subscriptions, setSubscriptions] = useState([]);
-  const [availablePlans, setAvailablePlans] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [cancelling, setCancelling] = useState(false);
-  const [showCancelModal, setShowCancelModal] = useState(false);
-  const [selectedSubscriptionId, setSelectedSubscriptionId] = useState(null);
+const SubscriptionsPage = () => {
+  const [tab, setTab] = useState('all');
+  // Мои абонементы
+  const [mySubs, setMySubs] = useState([]);
+  const [myLoading, setMyLoading] = useState(true);
+  const [myError, setMyError] = useState('');
+  // Актуальные абонементы
+  const [plans, setPlans] = useState([]);
+  const [plansLoading, setPlansLoading] = useState(true);
+  const [plansError, setPlansError] = useState('');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const params = new URLSearchParams(location.search);
+  const initialGymId = params.get('gym');
+  const [selectedGym, setSelectedGym] = useState(initialGymId || '');
   const [gyms, setGyms] = useState([]);
-  const [selectedGymsByPlan, setSelectedGymsByPlan] = useState({});
-  const [paymentMethodByPlan, setPaymentMethodByPlan] = useState({});
+  
+  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [savedCards, setSavedCards] = useState([]);
+  const [selectedCard, setSelectedCard] = useState('');
+  
+  // Покупка
+  const [showBuyModal, setShowBuyModal] = useState(false);
+  const [buyPlanId, setBuyPlanId] = useState(null);
+  const [buyLoading, setBuyLoading] = useState(false);
+  const [buyError, setBuyError] = useState('');
 
   useEffect(() => {
-    fetchSubscriptions();
+    fetchMySubscriptions();
+    fetchPlans();
     fetchGyms();
   }, []);
 
+  useEffect(() => {
+    if (showBuyModal && paymentMethod === 'card') {
+      fetchSavedCards();
+    }
+  }, [showBuyModal, paymentMethod]);
+  
+  const fetchSavedCards = async () => {
+    try {
+      const res = await api.get('/api/v1/payments/saved-cards/');
+      setSavedCards(Array.isArray(res.data) ? res.data : []);
+    } catch {
+      setSavedCards([]);
+    }
+  };
+  
   const fetchGyms = async () => {
     try {
-      const response = await api.get('/api/v1/gyms/');
-      const data = Array.isArray(response.data?.results) ? response.data.results : [];
-      setGyms(data);
-    } catch (err) {
-      console.error('Ошибка при загрузке залов:', err);
+      const res = await api.get('/api/v1/gyms/');
+      setGyms(Array.isArray(res.data?.results) ? res.data.results : []);
+    } catch {
+      setGyms([]);
     }
   };
 
-  const fetchSubscriptions = async () => {
+  const fetchMySubscriptions = async () => {
+    setMyLoading(true); setMyError('');
     try {
-      setLoading(true);
-      setError('');
-
-      const subscriptionsResponse = await getMySubscriptions();
-      const data = Array.isArray(subscriptionsResponse.data?.results)
-        ? subscriptionsResponse.data.results
-        : [];
-      setSubscriptions(data);
-
-      const plansResponse = await getMembershipPlans();
-      const plans = Array.isArray(plansResponse.data?.results)
-        ? plansResponse.data.results
-        : [];
-      setAvailablePlans(plans);
-
-    } catch (err) {
-      console.error('Ошибка при загрузке абонементов:', err);
-      setError('Не удалось загрузить информацию об абонементах');
-      setSubscriptions([]);
-      setAvailablePlans([]);
+      const res = await api.get('/api/v1/subscriptions/my-subscriptions/');
+      setMySubs(Array.isArray(res.data?.results) ? res.data.results : res.data);
+    } catch {
+      setMyError('Ошибка при загрузке моих абонементов');
     } finally {
-      setLoading(false);
+      setMyLoading(false);
     }
   };
 
-  const handleSubscribe = async (planId) => {
-    const gymId = selectedGymsByPlan[planId];
-    const paymentMethod = paymentMethodByPlan[planId] || 'cash';
+  const fetchPlans = async () => {
+    setPlansLoading(true); setPlansError('');
+    try {
+      const res = await api.get('/api/v1/subscriptions/membership-plans/');
+      setPlans(Array.isArray(res.data?.results) ? res.data.results : res.data);
+    } catch {
+      setPlansError('Ошибка при загрузке планов');
+    } finally {
+      setPlansLoading(false);
+    }
+  };
 
-    if (!gymId) {
-      setError('Выберите зал перед оформлением абонемента.');
+  // Открыть модалку покупки с выбранным абонементом
+  const handleBuy = (planId) => {
+    setBuyPlanId(planId);
+    setShowBuyModal(true);
+    setBuyError('');
+  };
+
+  // Купить абонемент
+  const handleConfirmBuy = async () => {
+    if (!buyPlanId || !selectedGym) {
+      setBuyError('Выберите зал!');
       return;
     }
-
+    setBuyLoading(true);
+    setBuyError('');
     try {
-      setLoading(true);
-      const today = new Date().toISOString().split('T')[0];
-
-      const subResponse = await api.post('/api/v1/subscriptions/', {
-        plan: planId,
-        start_date: today,
-        gym: gymId,
+      await api.post('/api/v1/subscriptions/', {
+        plan: buyPlanId,
+        gym: selectedGym,
+        start_date: new Date().toISOString().split('T')[0],
+        payment_method: paymentMethod,
+        saved_card_id: paymentMethod === 'card' ? selectedCard : null
       });
-
-      const subscriptionId = subResponse?.data?.id;
-
-      if (subscriptionId) {
-        await api.post(`/api/v1/payments/for-subscription/${subscriptionId}/`, {
-          method: paymentMethod,
-        });
-      }
-
-      await fetchSubscriptions();
-    } catch (err) {
-      console.error('Ошибка при оформлении абонемента:', err.response?.data || err);
-      setError('Не удалось оформить абонемент. Попробуйте позже.');
+      setShowBuyModal(false);
+      fetchMySubscriptions(); // обновить "Мои абонементы"
+      // Редиректим на страницу зала:
+      navigate('/profile', { state: { tab: 'payments' } });
+    } catch (e) {
+      setBuyError('Ошибка при покупке абонемента');
     } finally {
-      setLoading(false);
+      setBuyLoading(false);
     }
   };
 
-  const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString('ru-RU', options);
+  // ---- ОТРИСОВКА ----
+
+  const renderMySubscriptions = () => {
+    if (myLoading) return <Spinner animation="border" />;
+    if (myError) return <Alert variant="danger">{myError}</Alert>;
+    if (!mySubs.length) return <Alert variant="info">У вас нет активных абонементов</Alert>;
+    return (
+      <Row>
+        {mySubs.map(sub => (
+          <Col key={sub.id} md={6} lg={4} className="mb-4">
+            <Card>
+              <Card.Body>
+                <h5>{sub.plan_details?.name || 'Абонемент'}</h5>
+                <div>Зал: {sub.gym_details?.name || '-'}</div>
+                <div>Период: {sub.start_date} — {sub.end_date}</div>
+                <div>Статус: <b>{sub.status === 'active' ? 'Активный' : sub.status === 'expired' ? 'Истёк' : 'Отменен'}</b></div>
+                <div>Осталось посещений: {sub.visits_left ?? '∞'}</div>
+              </Card.Body>
+            </Card>
+          </Col>
+        ))}
+      </Row>
+    );
   };
 
-  const calculateDaysLeft = (endDate) => {
-    const today = new Date();
-    const end = new Date(endDate);
-    const diffTime = end - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays > 0 ? diffDays : 0;
+  const renderPlans = () => {
+    if (plansLoading) return <Spinner animation="border" />;
+    if (plansError) return <Alert variant="danger">{plansError}</Alert>;
+    if (!plans.length) return <Alert variant="info">Нет доступных абонементов</Alert>;
+    return (
+      <Row>
+        {plans.map(plan => (
+          <Col key={plan.id} md={6} lg={4} className="mb-4">
+            <Card>
+              <Card.Body>
+                <h5>{plan.name}</h5>
+                <div>Цена: {plan.price}₸</div>
+                <div>Длительность: {plan.duration_days} дней</div>
+                <div>Лимит посещений: {plan.visits_limit ?? 'Безлимит'}</div>
+                <div className="mt-3">
+                  <Button variant="outline-primary" onClick={() => handleBuy(plan.id)}>
+                    Купить
+                  </Button>
+                </div>
+                <div className="mt-2 text-muted small">{plan.description}</div>
+              </Card.Body>
+            </Card>
+          </Col>
+        ))}
+      </Row>
+    );
   };
 
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'active': return <Badge bg="success">Активный</Badge>;
-      case 'expired': return <Badge bg="secondary">Истёк</Badge>;
-      case 'cancelled': return <Badge bg="danger">Отменен</Badge>;
-      default: return <Badge bg="info">{status}</Badge>;
-    }
-  };
-
-  const handleShowCancelModal = (subscriptionId) => {
-    setSelectedSubscriptionId(subscriptionId);
-    setShowCancelModal(true);
-  };
-
-  const handleCancelSubscription = async () => {
-    if (!selectedSubscriptionId) return;
-    try {
-      setCancelling(true);
-      await cancelSubscription(selectedSubscriptionId);
-      await fetchSubscriptions();
-      setShowCancelModal(false);
-    } catch (err) {
-      console.error('Ошибка при отмене абонемента:', err);
-      setError('Не удалось отменить абонемент. Пожалуйста, попробуйте позже.');
-    } finally {
-      setCancelling(false);
-    }
-  };
+  // Модалка покупки абонемента
+  const renderBuyModal = () => (
+    <Modal show={showBuyModal} onHide={() => setShowBuyModal(false)}>
+      <Modal.Header closeButton>
+        <Modal.Title>Купить абонемент</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+  <Form.Group className="mb-3">
+    <Form.Label>Зал</Form.Label>
+    <Form.Select
+      value={selectedGym}
+      onChange={e => setSelectedGym(e.target.value)}
+      disabled={!!initialGymId}
+    >
+      <option value="">-- Выберите зал --</option>
+      {gyms.map(gym => (
+        <option key={gym.id} value={gym.id}>
+          {gym.name}
+        </option>
+      ))}
+    </Form.Select>
+  </Form.Group>
+  <Form.Group className="mb-3">
+    <Form.Label>Метод оплаты</Form.Label>
+    <Form.Select
+      value={paymentMethod}
+      onChange={e => setPaymentMethod(e.target.value)}
+    >
+      <option value="cash">Наличные</option>
+      <option value="card">Карта</option>
+      <option value="paypal">PayPal</option>
+    </Form.Select>
+  </Form.Group>
+  {paymentMethod === 'card' && (
+    <Form.Group className="mb-3">
+      <Form.Label>Выберите сохранённую карту</Form.Label>
+      <Form.Select
+        value={selectedCard}
+        onChange={e => setSelectedCard(e.target.value)}
+      >
+        <option value="">-- Выберите карту --</option>
+        {savedCards.map(card => (
+          <option key={card.id} value={card.id}>
+            {card.masked_card_number} ({card.expiry_month}/{card.expiry_year})
+          </option>
+        ))}
+      </Form.Select>
+    </Form.Group>
+  )}
+  {buyError && <Alert variant="danger">{buyError}</Alert>}
+</Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={() => setShowBuyModal(false)}>
+          Отмена
+        </Button>
+        <Button variant="primary" onClick={handleConfirmBuy} disabled={buyLoading}>
+          {buyLoading ? 'Покупаем...' : 'Купить'}
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
 
   return (
-    <Container className="py-5">
-      <h1 className="mb-4">Мои абонементы</h1>
-
-      {loading ? (
-        <div className="text-center my-5">
-          <Spinner animation="border" variant="primary" />
-          <p className="mt-3">Загрузка абонементов...</p>
-        </div>
-      ) : error ? (
-        <Alert variant="danger">{error}</Alert>
-      ) : (
-        <>
-          <Row>
-            {availablePlans.map(plan => (
-              <Col key={plan.id} md={6} lg={4} className="mb-4">
-                <Card className="plan-card">
-                  <Card.Body>
-                    <div className="text-center mb-3">
-                      <h5>{plan.name}</h5>
-                      <div className="plan-price">
-                        <span className="amount">{plan.price} ₽</span>
-                        <span className="period">/ {plan.duration_days} дней</span>
-                      </div>
-                    </div>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Зал</Form.Label>
-                      <Form.Select
-                        value={selectedGymsByPlan[plan.id] || ''}
-                        onChange={(e) =>
-                          setSelectedGymsByPlan(prev => ({ ...prev, [plan.id]: e.target.value }))
-                        }
-                      >
-                        <option value="">-- Зал не выбран --</option>
-                        {gyms.map(gym => (
-                          <option key={gym.id} value={gym.id}>{gym.name}</option>
-                        ))}
-                      </Form.Select>
-                    </Form.Group>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Метод оплаты</Form.Label>
-                      <Form.Select
-                        value={paymentMethodByPlan[plan.id] || 'cash'}
-                        onChange={(e) =>
-                          setPaymentMethodByPlan(prev => ({ ...prev, [plan.id]: e.target.value }))
-                        }
-                      >
-                        <option value="cash">Наличные</option>
-                        <option value="card">Карта</option>
-                        <option value="paypal">PayPal</option>
-                      </Form.Select>
-                    </Form.Group>
-                    <Button variant="outline-primary" onClick={() => handleSubscribe(plan.id)}>
-                      Оформить абонемент
-                    </Button>
-                  </Card.Body>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-        </>
-      )}
-
-      <Modal show={showCancelModal} onHide={() => setShowCancelModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Подтверждение отмены</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p>Вы уверены, что хотите отменить абонемент? Эту операцию нельзя отменить.</p>
-          <p>Обратите внимание, что средства за неиспользованные дни абонемента возвращаются в соответствии с правилами возврата.</p>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowCancelModal(false)} disabled={cancelling}>
-            Нет, оставить
-          </Button>
-          <Button variant="danger" onClick={handleCancelSubscription} disabled={cancelling}>
-            {cancelling ? (
-              <>
-                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
-                Отмена...
-              </>
-            ) : (
-              'Да, отменить'
-            )}
-          </Button>
-        </Modal.Footer>
-      </Modal>
+    <Container className="">
+      <Tabs activeKey={tab} onSelect={setTab} className="mb-4">
+        <Tab eventKey="my" title="Мои абонементы">
+          {renderMySubscriptions()}
+        </Tab>
+        <Tab eventKey="all" title="Актуальные абонементы">
+          {renderPlans()}
+        </Tab>
+      </Tabs>
+      {renderBuyModal()}
     </Container>
   );
 };
 
-export default SubscriptionPage;
+export default SubscriptionsPage;
