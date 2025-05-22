@@ -194,7 +194,6 @@ const GymDetailPage = () => {
             <Tab eventKey="heatmap" title="Тепловая карта">
               <Card className="side-card">
                 <Card.Body>
-                  {/* Добавляем новый компонент тепловой карты */}
                   <LoadHeatmap gymId={id} />
                 </Card.Body>
               </Card>

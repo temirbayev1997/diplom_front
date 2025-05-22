@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Alert, Spinner, Form } from 'react-bootstrap';
-import analyticsService from '../../services/analyticsService';
+import api from '../../services/api'; 
 
 const LoadHeatmap = ({ gymId }) => {
   const [loading, setLoading] = useState(true);
@@ -9,21 +9,32 @@ const LoadHeatmap = ({ gymId }) => {
   const [selectedWeek, setSelectedWeek] = useState('current');
 
   useEffect(() => {
+    console.log("LoadHeatmap загружен с gymId:", gymId);
     if (gymId) {
       fetchPredictions();
     }
   }, [gymId, selectedWeek]);
-
+  
+  const handleWeekChange = (e) => {
+    const week = e.target.value;
+    console.log("Смена недели на:", week);
+    setSelectedWeek(week);
+  };
+  
   const fetchPredictions = async () => {
     setLoading(true);
     try {
-      let response;
+      let url = '';
       if (selectedWeek === 'current') {
-        response = await analyticsService.getCurrentWeekPredictions(gymId);
+        url = `/api/v1/analytics/predictions/current_week/?gym=${gymId}`;
       } else {
-        response = await analyticsService.getNextWeekPredictions(gymId); 
+        url = `/api/v1/analytics/predictions/next_week/?gym=${gymId}`;
       }
-      setPredictions(Array.isArray(response.data) ? response.data : []);
+      const response = await api.get(url, { withCredentials: true });
+      let data = response.data;
+      if (data && data.results) data = data.results;
+      setPredictions(Array.isArray(data) ? data : []);
+      setError(null);
     } catch (err) {
       setError('Не удалось загрузить данные о загруженности');
       setPredictions([]);
@@ -33,32 +44,31 @@ const LoadHeatmap = ({ gymId }) => {
   };
   
   
-
   // Преобразуем данные для тепловой карты
   const processData = () => {
-    if (!predictions || predictions.length === 0) return [];
-
-    // Создаем массив дней недели
+    if (!predictions || predictions.length === 0) return {};
+  
     const weekdays = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
-    
-    // Группируем по дням недели и часам
+  
     const groupedData = {};
-    
-    (predictions || []).forEach(item => {
+  
+    predictions.forEach(item => {
       const date = new Date(item.date);
-      const dayOfWeek = date.getDay(); // 0 - воскресенье, 1 - понедельник и т.д.
-      const dayName = weekdays[dayOfWeek === 0 ? 6 : dayOfWeek - 1]; // Приводим к нашему формату (пн-вс)
+      const dayOfWeek = date.getDay();
+      const dayName = weekdays[dayOfWeek === 0 ? 6 : dayOfWeek - 1];
       const hour = item.hour;
-      
+      const load = item.predicted_load;
+  
       if (!groupedData[dayName]) {
         groupedData[dayName] = {};
       }
-      
-      groupedData[dayName][hour] = item.predicted_load;
+  
+      groupedData[dayName][hour] = load;
     });
-    
+  
     return groupedData;
   };
+  
 
   const getColorForValue = (value, max = 100) => {
     // Определяем цвет в зависимости от загруженности
@@ -96,7 +106,7 @@ const LoadHeatmap = ({ gymId }) => {
             <Form.Label>Период</Form.Label>
             <Form.Select 
               value={selectedWeek}
-              onChange={(e) => setSelectedWeek(e.target.value)}
+              onChange={handleWeekChange}
             >
               <option value="current">Текущая неделя</option>
               <option value="next">Следующая неделя</option>
