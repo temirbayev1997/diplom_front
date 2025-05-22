@@ -34,12 +34,16 @@ const LoadPredictionChart = ({ gymId, date }) => {
       try {
         setLoading(true);
         const response = await analyticsService.getPredictions(gymId, date);
-        const data = Array.isArray(response.data) ? response.data : [];
-        setPredictionData(data);
+  
+        let data = response.data;
+        if (data && data.results) {
+          data = data.results; 
+        }
+        setPredictionData(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error('Error fetching predictions:', err);
         setError('Не удалось загрузить прогноз загруженности');
-        setPredictionData([]); // <--- важно!
+        setPredictionData([]);
       } finally {
         setLoading(false);
       }
@@ -49,6 +53,7 @@ const LoadPredictionChart = ({ gymId, date }) => {
       fetchPredictions();
     }
   }, [gymId, date]);
+  
   
 
   if (loading) {
