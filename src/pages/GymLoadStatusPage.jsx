@@ -197,7 +197,10 @@ const GymLoadStatusPage = () => {
                             aria-valuemax="100"
                           ></div>
                         </div>
-                        <span className="ms-2">{Math.round(gym.predicted_load)} чел. ({gym.percentage}%)</span>
+                        <span className="ms-2">
+  {isNaN(Number(gym.predicted_load)) ? '0' : Math.round(Number(gym.predicted_load))} чел. 
+  ({isNaN(Number(gym.percentage)) ? 0 : gym.percentage}%)
+</span>
                       </div>
                     </td>
                     <td>{getLoadStatusBadge(gym.percentage)}</td>
