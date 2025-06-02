@@ -17,7 +17,7 @@ export const getById = (id) => {
 };
 
 export const getEquipment = (gymId) => {
-  return api.get(`/api/v1/gyms/equipment/?gym=${gymId}`);
+  return api.get(`/api/v1/equipment/?gym=${gymId}`);
 };
 
 export const searchGymsByPost = (data) => {
@@ -37,7 +37,7 @@ export default gymService;
 export const API_URLS = {
   GYMS: '/api/v1/gyms/',
   GYM_DETAIL: (id) => `/api/v1/gyms/${id}/`,
-  GYM_EQUIPMENT: '/api/v1/gyms/equipment/',
+  GYM_EQUIPMENT: '/api/v1/equipment/',
   ANALYTICS: '/api/v1/analytics/',
   BOOKINGS: '/api/v1/bookings/',
   USERS: '/api/v1/users/'

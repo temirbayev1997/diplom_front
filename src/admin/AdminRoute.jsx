@@ -1,9 +1,16 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
-export default function AdminRoute({ children }) {
-  const token = localStorage.getItem("token");
-  // Можно добавить decode токена (jwt-decode) для проверки is_staff если надо
-  if (!token) return <Navigate to="/admin-login" replace />;
-  return children;
-}
+const AdminRoute = ({ children }) => {
+    const token = localStorage.getItem("token");
+    if (!token) return <Navigate to="/admin-login" replace />;
+    let payload = null;
+    try {
+      payload = jwtDecode(token);
+    } catch {
+      return <Navigate to="/admin-login" replace />;
+    }
+    return children;
+};
+export default AdminRoute;

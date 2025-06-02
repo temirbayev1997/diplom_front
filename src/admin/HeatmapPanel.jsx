@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { fetchAttendanceHeatmap } from "../services/adminApi";
 
-export default function HeatmapPanel({ gymId, gymName, onClose }) {
+const HeatmapPanel = ({ gymId, gymName, onClose }) =>{
   const [heatmap, setHeatmap] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -13,7 +13,6 @@ export default function HeatmapPanel({ gymId, gymName, onClose }) {
 
   if (loading) return <div>Загрузка тепловой карты...</div>;
 
-  // Можно использовать библиотеку, например, react-heatmap-grid, или отрендерить как таблицу:
   return (
     <div className="card mt-4">
       <div className="card-header d-flex justify-content-between align-items-center">
@@ -29,3 +28,5 @@ export default function HeatmapPanel({ gymId, gymName, onClose }) {
     </div>
   );
 }
+
+export default HeatmapPanel;
