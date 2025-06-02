@@ -148,6 +148,16 @@ const LoginPage = () => {
                     Зарегистрироваться
                   </Link>
                 </p>
+                <div className="text-center mt-2">
+  <Button
+    variant="outline-dark"
+    onClick={() => navigate("/admin-login")}
+    className="fw-bold"
+  >
+    Перейти в административную панель
+  </Button>
+</div>
+
               </div>
             </Card.Body>
           </Card>

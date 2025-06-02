@@ -12,10 +12,12 @@ import GymDetailPage from './pages/GymDetailPage';
 import BookingPage from './pages/BookingPage';
 import ProfilePage from './pages/ProfilePage';
 import SubscriptionPage from './pages/SubscriptionPage';
-import AdminDashboard from './pages/AdminDashboard';
 import NotificationsPage from './pages/NotificationsPage';
 import GymLoadStatusPage from './pages/GymLoadStatusPage'; 
 import CombinedSubscriptionsAndBookings from './pages/CombinedSubscriptionsAndBookings';
+import AdminDashboard from "./admin/AdminDashboard";
+import AdminLogin from "./admin/AdminLogin";
+import AdminRoute from "./admin/AdminRoute";
 
 const ProtectedRoute = ({ children, adminRequired = false }) => {
   const isAuthenticated = localStorage.getItem('token');
@@ -96,7 +98,22 @@ function AppRoutes() {
             </ProtectedRoute>
           }
           />
-          
+          <Route
+          path="/admin-login"
+          element={
+            <GuestRoute>
+              <AdminLogin />
+            </GuestRoute>
+          }
+          />
+          <Route
+          path="/admin-dashboard"
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+          />
           <Route 
           path="/gyms" 
           element=
@@ -135,15 +152,6 @@ function AppRoutes() {
             element={
               <ProtectedRoute>
                 <SubscriptionPage />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/admin" 
-            element={
-              <ProtectedRoute adminRequired={true}>
-                <AdminDashboard />
               </ProtectedRoute>
             } 
           />
